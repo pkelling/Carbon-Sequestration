@@ -55,30 +55,55 @@ lng = latlng(:,2);
 largestSources = string(powerSources(sourceIdx))';
 
 
-% Create the map         
-gb = geobubble(lat,lng,totalEmissions, categorical(largestSources),...
+% Setup for the map (create a table)
+dataTable = table(lat, lng,totalEmissions,largestSources);
+dataTable.Properties.VariableNames = {'Latitudes', 'Longitudes',...
+                        'Emissions','MajorSource'};
+dataTable.MajorSource = categorical(dataTable.MajorSource);
+              
+
+% Create the map
+gb = geobubble(dataTable, 'Latitudes','Longitudes',...
+        'SizeVariable','Emissions',...
+        'ColorVariable','MajorSource',...
         'ColorLegendTitle','Largest Energy Source',...
         'SizeLegendTitle','Emissions [lb CO2]',...
-        'MapLayout','maximized','GridVisible',false,...
-        'ScaleBarVisible',false);
-title("Each states largest power sources");
+        'ScaleBarVisible',false,'GridVisible',false,...
+        'Title',"Total Emissions and Major Power Source");
+    
+  
 
-
+    
 % ---------- Map Visualization of particular power source --------- %
-
 source = menu("View particular power source on map?", powerSources);
+totalMaxEnergy = max(max(energyBySource));
 
 while(source ~= 0)
-    tempTitle = sprintf("%s production [MWh]",string(powerSources(source)));
-    geobubble(lat,lng,energyBySource(:,source),categorical(powerSources(source)),...
-                'SizeLegendTitle',tempTitle,...
-                'MapLayout','maximized','GridVisible',false,...
-                'ScaleBarVisible',false,'BubbleWidthRange',[1,20]);
+    % Create table for map
+    srcTable = table(lat, lng,energyBySource(:,source));
+    srcTable.Properties.VariableNames = {'Latitudes', 'Longitudes','EnergyProduced'};
+    
+    %unique titles for current source
+    sizeTitle = sprintf("%s production [MWh]",string(powerSources(source)));
+    mainTitle = sprintf("States Energy Production from %s",string(powerSources(source)));
+    
+    bubbleRatio = max(energyBySource(:,source)) / totalMaxEnergy;
+    maxBubbleSize = ceil(bubbleRatio*40);
+    
+    % Create map
+    geobubble(srcTable,'Latitudes','Longitudes',...
+                    'SizeVariable','EnergyProduced',...
+                    'SizeLegendTitle',sizeTitle,...
+                    'Title',mainTitle,...
+                    'GridVisible',false,...
+                    'ScaleBarVisible',false,'BubbleWidthRange',[1,maxBubbleSize]);
+        
     source = menu("View another power source on map?", powerSources);
 end
 
-%%
-% ---------- Help User Visualize Data ------------- %
+
+
+%% ---------- Help User Visualize Data ------------- %
 
 choice = menu("View particular power sources by State?","yes","no");
 
