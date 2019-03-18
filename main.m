@@ -16,3 +16,5 @@ powerSources = labels(3,4:14);
 %power sources percentages by state 
 sourcesByState = stateResourceMix(1:52,3:end);
 energyByState = stateResourceMix(1:52,2);
+
+fprintf("hello world");
