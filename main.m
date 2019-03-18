@@ -15,7 +15,8 @@ clc;
 %               -lower is better (less carbon per MWh)
 %       2) sourcePercent [%] -sources of power for each state
 %       3) energyTotals [MWh] -total energy created for each state
-%       4) totalEmissions [lb] -CO2 emissions by state
+%       4) energyBySource [MWh] -energy each state produces by source
+%       5) totalEmissions [lb] -CO2 emissions by state
 
 %Load emmision rates data [lb/MWh]
 [emissionsRates,labels] = xlsread("egrid2016_summarytables.xlsx",4);
@@ -34,39 +35,49 @@ sourcePercent = stateResourceMix(1:51,3:end);
 %total energy for each state [MWh]
 energyTotals = stateResourceMix(1:51,2);
 
+%energy consumption by source for each state
+energyBySource = energyTotals .* sourcePercent;
+
 %emissions totals for each state
 totalEmissions = energyTotals .* carbonEfficiency;
 
 
 
+% ----------- Map Visualization of largest power source --------------- %
 
-% ----------- Map Visualization --------------- %
-%Create map of emissions by state
 latlng = xlsread("statesCenters.xlsx");
+lat = latlng(:,1);
+lng = latlng(:,2);
 
+
+%get largest power source for each state
 [temp,sourceIdx] = max(sourcePercent,[],2);
 largestSources = string(powerSources(sourceIdx))';
 
-% Setup for the map (create a table)
-dataTable = table(latlng(:,1), latlng(:,2),totalEmissions,largestSources);
-dataTable.Properties.VariableNames = {'Latitudes', 'Longitudes',...
-                        'Emissions','MajorSource'};
-dataTable.MajorSource = categorical(dataTable.MajorSource);
-              
 
-% Create a map         
-gb = geobubble(dataTable, 'Latitudes','Longitudes',...
-        'SizeVariable','Emissions',...
-        'ColorVariable','MajorSource',...
+% Create the map         
+gb = geobubble(lat,lng,totalEmissions, categorical(largestSources),...
         'ColorLegendTitle','Largest Energy Source',...
         'SizeLegendTitle','Emissions [lb CO2]',...
         'MapLayout','maximized','GridVisible',false,...
         'ScaleBarVisible',false);
 title("Each states largest power sources");
 
-    
 
+% ---------- Map Visualization of particular power source --------- %
 
+source = menu("View particular power source on map?", powerSources);
+
+while(source ~= 0)
+    tempTitle = sprintf("%s production [MWh]",string(powerSources(source)));
+    geobubble(lat,lng,energyBySource(:,source),categorical(powerSources(source)),...
+                'SizeLegendTitle',tempTitle,...
+                'MapLayout','maximized','GridVisible',false,...
+                'ScaleBarVisible',false,'BubbleWidthRange',[1,20]);
+    source = menu("View another power source on map?", powerSources);
+end
+
+%%
 % ---------- Help User Visualize Data ------------- %
 
 choice = menu("View particular power sources by State?","yes","no");
