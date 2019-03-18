@@ -19,4 +19,4 @@ energyByState = stateResourceMix(1:52,2);
 
 fprintf("hello world");
 
-%branch test
+%this is a test
