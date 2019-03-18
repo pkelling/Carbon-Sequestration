@@ -19,5 +19,4 @@ energyByState = stateResourceMix(1:52,2);
 
 fprintf("hello world");
 
-%this is a test
-%test pull branch pull request
+%hello world
