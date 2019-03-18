@@ -18,3 +18,5 @@ sourcesByState = stateResourceMix(1:52,3:end);
 energyByState = stateResourceMix(1:52,2);
 
 fprintf("hello world");
+
+%this is a test
