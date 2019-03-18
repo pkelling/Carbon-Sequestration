@@ -103,7 +103,7 @@ end
 
 
 
-%% ---------- Help User Visualize Data ------------- %
+% ---------- Help User Visualize Data ------------- %
 
 choice = menu("View particular power sources by State?","yes","no");
 
