@@ -2,8 +2,6 @@ clear all;
 close all;
 clc;
 
-% hello world
-% hello world
 % ----------- Load Emissions Data --------------%
 %          And Extract Useful Information
 
@@ -25,7 +23,7 @@ clc;
 
 %Load emmision rates data [lb/MWh]
 [emissionsRates,labels] = xlsread("egrid2016_summarytables.xlsx",4);
-emissionsFactors = emissionsRates(1:end-2,1);
+emissionsFactors = emissionsRates(1:51,1);
 states = string(labels(5:55,1));
 
 %Load energy output by source [MWh]
@@ -144,5 +142,3 @@ end
 
 
 % -------- Load in Carbon Storage data -------------- %
-
-%loaded data Add
