@@ -45,9 +45,6 @@ energyBySource = energyTotals .* sourcePercent;
 totalEmissions = energyTotals .* emissionsFactors;
 
 
-
-
-
 % ----------- Map Visualization of States Emissions --------------- %
 
 latlng = xlsread("statesCenters.xlsx");
