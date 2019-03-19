@@ -54,7 +54,6 @@ latlng = xlsread("statesCenters.xlsx");
 lat = latlng(:,1);
 lng = latlng(:,2);
 
-
 %get largest power source for each state
 [temp,sourceIdx] = max(sourcePercent,[],2);
 largestSources = string(powerSources(sourceIdx))';
@@ -76,16 +75,16 @@ set(figh,'position',[pos(1:2)/2 pos(3:4)*1.5])
 geobubble(dataTable, 'Latitude','Longitude',...
         'SizeVariable','CO2Emissions',...
         'ColorVariable','MajorSource',...
+        'Title',"CO2 Emissions For Each State",...
         'ColorLegendTitle','Largest Energy Source',...
         'SizeLegendTitle','Emissions [lb CO2]',...
-        'BubbleWidthRange',[3,25],...
-        'ScaleBarVisible',false,'GridVisible',false,...
-        'Title',"CO2 Emissions For Each State");
+        'BubbleWidthRange',[4,25],...
+        'ScaleBarVisible',false,'GridVisible',false);
     
 
+     
     
-%%    
-    
+
 % ---------- Map Visualization of particular power source --------- %
 
 
@@ -120,6 +119,7 @@ end
 
 
 
+
 % ---------- Help User Visualize Data ------------- %
 
 choice = menu("Compare state power sources?","yes","no");
@@ -137,7 +137,6 @@ if choice == 1
         fprintf("No state selected, moving to next step. \n");
     end
 end
-
 
 
 
