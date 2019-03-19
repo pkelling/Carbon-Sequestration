@@ -140,4 +140,18 @@ end
 
 % -------- Load in Carbon Storage data -------------- %
 
+[numbers,labels] = xlsread('Table_1.xlsx');
+
+statesStorage = labels(9:280,93:2:107);
+statesPercent = numbers(1:272,92:106);
+
+Volumes = numbers(1:272,14);
+Densities = numbers(1:272,22);
+
+
+
+
+
+
+
 
