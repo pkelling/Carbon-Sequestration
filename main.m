@@ -2,8 +2,7 @@ clear all;
 close all;
 clc;
 
-% hello world
-% hello world
+
 % ----------- Load Emissions Data --------------%
 %          And Extract Useful Information
 
@@ -145,4 +144,3 @@ end
 
 % -------- Load in Carbon Storage data -------------- %
 
-%loaded data Add
