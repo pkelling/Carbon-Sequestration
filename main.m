@@ -51,6 +51,10 @@ totalEmissions = energyTotals .* emissionsFactors;
 
 % ----------- Map Visualization of States Emissions --------------- %
 
+% TODO:
+% Maybe do:
+%   1) experiment with initial map size on different computers
+
 latlng = xlsread("statesCenters.xlsx");
 lat = latlng(:,1);
 lng = latlng(:,2);
@@ -88,6 +92,10 @@ geobubble(dataTable, 'Latitude','Longitude',...
 
 % ---------- Map Visualization of particular power source --------- %
 
+% TODO:
+%   1) Change sizes of bubbles so scale is same for every power source.
+%   2) fire warning if user makes no choice and closes window
+%   3) add escape for exit loop
 
 
 source = menu("View a particular power source?", powerSources);
@@ -121,7 +129,18 @@ end
 
 
 
-% ---------- Help User Visualize Data ------------- %
+
+% ---------- States Side by Side comparison ------------- %
+
+% TODO:
+%   1) **Validate User Input**
+%   2) Change to loop so you can select different states.
+%   3) Make chart based on actual energy output, not percent of output
+%       -This will help give a better idea of energy output differences
+%       between states
+% maybe do:
+%   1) Change colors so they match resource (coal->black, hydro->blue...)
+%   2) 
 
 choice = menu("Compare state power sources?","yes","no");
 
@@ -135,12 +154,83 @@ if choice == 1
         xlabel("Percentage of Power Generation");
         ylabel("State");
     else
-        fprintf("No state selected, moving to next step. \n");
+        warning("No state selected, moving to next step.");
     end
 end
 
 
 
 
+
+
+
 % -------- Load in Carbon Storage data -------------- %
+% Variables:
+%   1) Volumes = contains likely volume of every location
+%   2) Densities = contains likely density of every location
+%   3) stateWithStorage = list of states where location is
+%   4) percentInState = percentage of location in corresponding state
+%       -Note: if Nan has corresponding state, it is <1% (we assume 0) 
+
+[numbers,labels] = xlsread('Table_1.xlsx');
+
+stateWithStorage = string(labels(9:280,93:2:107));
+percentInState = numbers(1:272,92:2:106);
+
+Volumes = numbers(1:272,14);
+Densities = numbers(1:272,22);
+
+% -- Validate Data 
+
+% Remove lines where Volume is Nan (they were blank lines)
+blankLines = find(isnan(Volumes));
+Volumes(blankLines) = [];
+Densities(blankLines) = [];
+stateWithStorage(blankLines,:) = [];
+percentInState(blankLines,:) = [];
+
+
+
+% -------- Find Storage Volume By State ------------ %
+
+% TODO:
+%   1) Convert Storage to lbs CO2 for each site
+%   2) Get total lbs of storage for each state
+
+
+
+% ------------ Map lbs storage by state ------------- %
+%           Along with lbs emissions ????
+%   Possible: select between 3 maps: min, M likely, and max storage?
+
+
+
+% ----------- Plot storage over years ------------ %
+%   -Using 100% storage rate plot storage over time to see when storage
+%   fills up
+%   -Then, ask user to input % of emissions stored per year 
+%   OR
+%   -Ask user to enter increase in emissions stored per year (% increase)
+%   plot storage and emissions over time
+
+
+% ----------- Add in a rate of change in emissions -----------%
+%   Ask user to input an emissions rate of change per year
+%   -using that, and previous value of % emissions stored (or % increase
+%   stored), plot storage and emissions over time to get a final idea of
+%   how effective carbon sequestration will be at dealing with the
+%   emissions problem.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
