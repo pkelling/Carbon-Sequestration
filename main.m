@@ -4,7 +4,6 @@ clc;
 
 
 
-
 % ----------- Load Emissions Data --------------%
 %          And Extract Useful Information
 
@@ -147,3 +146,30 @@ end
 
 
 
+
+% -------- Load in Carbon Storage data -------------- %
+%   Variables:
+% Volumes = contains likely volume of every location
+% Densities = contains likely density of every location
+% stateWithStorage = list of states where location is
+% percentInState = percentage of location in corresponding state
+%       -Note: if Nan has corresponding state, it is <1% (we assume 0) 
+
+[numbers,labels] = xlsread('Table_1.xlsx');
+
+stateWithStorage = string(labels(9:280,93:2:107));
+percentInState = numbers(1:272,92:2:106);
+
+Volumes = numbers(1:272,14);
+Densities = numbers(1:272,22);
+
+% -- Validate Data 
+
+% Remove lines where Volume is Nan (it was a blank line)
+blankLines = find(isnan(Volumes));
+Volumes(blankLines) = [];
+Densities(blankLines) = [];
+stateWithStorage(blankLines,:) = [];
+percentInState(blankLines,:) = [];
+
+%comment
