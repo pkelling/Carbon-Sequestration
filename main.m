@@ -2,25 +2,29 @@ clear all;
 close all;
 clc;
 
+
 % ----------- Load Emissions Data --------------%
 %          And Extract Useful Information
 %
 % Important Variables
 %   Strings:
-%       1) states (abbreviated state names)
-%       2) powerSources (sources of power- gas,solar,coal...)
+%       1) states = abbreviated state names
+%       2) powerSources = sources of power (gas,solar,coal...)
 %
 %   Vectors:
-%       1) carbonEfficiency [lb/MWh] -efficiency of power gen by state.
-%               -lower is better (less carbon per MWh)
-%       2) sourcePercent [%] -sources of power for each state
-%       3) energyTotals [MWh] -total energy created for each state
-%       4) energyBySource [MWh] -energy each state produces by source
-%       5) totalEmissions [lb] -CO2 emissions by state
+%       1) emissionsFactors = [lb/MWh] cleanliness of energy production
+%               -lower is better (less CO2 for energy created)
+%       2) sourcePercent = [%] sources of power for each state
+%       3) energyTotals = [MWh] total energy created for each state
+%       4) totalEmissions = [lb] CO2 emissions by state
+%
+%   Matrix
+%       1) energyBySource = [MWh] energy each state produces by source
+
 
 %Load emmision rates data [lb/MWh]
 [emissionsRates,labels] = xlsread("egrid2016_summarytables.xlsx",4);
-carbonEfficiency = emissionsRates(1:end-2,1);
+emissionsFactors = emissionsRates(1:51,1);
 states = string(labels(5:55,1));
 
 %Load energy output by source [MWh]
@@ -39,43 +43,62 @@ energyTotals = stateResourceMix(1:51,2);
 energyBySource = energyTotals .* sourcePercent;
 
 %emissions totals for each state
-totalEmissions = energyTotals .* carbonEfficiency;
+totalEmissions = energyTotals .* emissionsFactors;
 
 
 
-% ----------- Map Visualization of largest power source --------------- %
+
+
+% ----------- Map Visualization of States Emissions --------------- %
+
+% TODO:
+% Maybe do:
+%   1) experiment with initial map size on different computers
 
 latlng = xlsread("statesCenters.xlsx");
 lat = latlng(:,1);
 lng = latlng(:,2);
 
-
 %get largest power source for each state
 [temp,sourceIdx] = max(sourcePercent,[],2);
 largestSources = string(powerSources(sourceIdx))';
 
-
 % Setup for the map (create a table)
 dataTable = table(lat, lng,totalEmissions,largestSources);
-dataTable.Properties.VariableNames = {'Latitudes', 'Longitudes',...
-                        'Emissions','MajorSource'};
+dataTable.Properties.VariableNames = {'Latitude', 'Longitude',...
+                        'CO2Emissions','MajorSource'};
 dataTable.MajorSource = categorical(dataTable.MajorSource);
               
 
+% This makes the initial map larger
+figh = figure(1);
+pos = get(figh,'position');
+set(figh,'position',[pos(1:2)/2 pos(3:4)*1.5])
+
+
 % Create the map
-gb = geobubble(dataTable, 'Latitudes','Longitudes',...
-        'SizeVariable','Emissions',...
+geobubble(dataTable, 'Latitude','Longitude',...
+        'SizeVariable','CO2Emissions',...
         'ColorVariable','MajorSource',...
+        'Title',"CO2 Emissions For Each State",...
         'ColorLegendTitle','Largest Energy Source',...
         'SizeLegendTitle','Emissions [lb CO2]',...
-        'ScaleBarVisible',false,'GridVisible',false,...
-        'Title',"Total Emissions and Major Power Source");
+        'BubbleWidthRange',[4,25],...
+        'ScaleBarVisible',false,'GridVisible',false);
     
-  
 
+     
     
+
 % ---------- Map Visualization of particular power source --------- %
-source = menu("View particular power source on map?", powerSources);
+
+% TODO:
+%   1) Change sizes of bubbles so scale is same for every power source.
+%   2) fire warning if user makes no choice and closes window
+%   3) add escape for exit loop
+
+
+source = menu("View a particular power source?", powerSources);
 totalMaxEnergy = max(max(energyBySource));
 
 while(source ~= 0)
@@ -87,8 +110,10 @@ while(source ~= 0)
     sizeTitle = sprintf("%s production [MWh]",string(powerSources(source)));
     mainTitle = sprintf("States Energy Production from %s",string(powerSources(source)));
     
+    % This creates a standard size, so 2 different sources are
+    %   on the same size scale
     bubbleRatio = max(energyBySource(:,source)) / totalMaxEnergy;
-    maxBubbleSize = ceil(bubbleRatio*40);
+    maxBubbleSize = 3 + ceil(bubbleRatio*35);
     
     % Create map
     geobubble(srcTable,'Latitudes','Longitudes',...
@@ -103,20 +128,109 @@ end
 
 
 
-%% ---------- Help User Visualize Data ------------- %
 
-choice = menu("View particular power sources by State?","yes","no");
+
+% ---------- States Side by Side comparison ------------- %
+
+% TODO:
+%   1) **Validate User Input**
+%   2) Change to loop so you can select different states.
+%   3) Make chart based on actual energy output, not percent of output
+%       -This will help give a better idea of energy output differences
+%       between states
+% maybe do:
+%   1) Change colors so they match resource (coal->black, hydro->blue...)
+%   2) 
+
+choice = menu("Compare state power sources?","yes","no");
 
 if choice == 1
-    stateNum = listdlg('PromptString',"Please select a state", 'ListString',states);
+    stateNum = listdlg('PromptString',"Please select state(s)", 'ListString',states);
 
     if(~isempty(stateNum))
         barh(categorical(states(stateNum)),sourcePercent(stateNum,:),'stacked');
         legend(powerSources);
         title("Emissions sources by state");
-        xlabel("Source");
-        ylabel("Percentage of Power Generation");
+        xlabel("Percentage of Power Generation");
+        ylabel("State");
     else
-        fprintf("No state selected, moving to next step. \n");
+        warning("No state selected, moving to next step.");
     end
 end
+
+
+
+
+
+
+
+% -------- Load in Carbon Storage data -------------- %
+% Variables:
+%   1) Volumes = contains likely volume of every location
+%   2) Densities = contains likely density of every location
+%   3) stateWithStorage = list of states where location is
+%   4) percentInState = percentage of location in corresponding state
+%       -Note: if Nan has corresponding state, it is <1% (we assume 0) 
+
+[numbers,labels] = xlsread('Table_1.xlsx');
+
+stateWithStorage = string(labels(9:280,93:2:107));
+percentInState = numbers(1:272,92:2:106);
+
+Volumes = numbers(1:272,14);
+Densities = numbers(1:272,22);
+
+% -- Validate Data 
+
+% Remove lines where Volume is Nan (they were blank lines)
+blankLines = find(isnan(Volumes));
+Volumes(blankLines) = [];
+Densities(blankLines) = [];
+stateWithStorage(blankLines,:) = [];
+percentInState(blankLines,:) = [];
+
+
+
+% -------- Find Storage Volume By State ------------ %
+
+% TODO:
+%   1) Convert Storage to lbs CO2 for each site
+%   2) Get total lbs of storage for each state
+
+
+
+% ------------ Map lbs storage by state ------------- %
+%           Along with lbs emissions ????
+%   Possible: select between 3 maps: min, M likely, and max storage?
+
+
+
+% ----------- Plot storage over years ------------ %
+%   -Using 100% storage rate plot storage over time to see when storage
+%   fills up
+%   -Then, ask user to input % of emissions stored per year 
+%   OR
+%   -Ask user to enter increase in emissions stored per year (% increase)
+%   plot storage and emissions over time
+
+
+% ----------- Add in a rate of change in emissions -----------%
+%   Ask user to input an emissions rate of change per year
+%   -using that, and previous value of % emissions stored (or % increase
+%   stored), plot storage and emissions over time to get a final idea of
+%   how effective carbon sequestration will be at dealing with the
+%   emissions problem.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
