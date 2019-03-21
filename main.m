@@ -4,7 +4,7 @@ clc;
 
 % ----------- Load Emissions Data --------------%
 %          And Extract Useful Information
-
+%
 % Important Variables
 %   Strings:
 %       1) states (abbreviated state names)
