@@ -22,53 +22,38 @@ clc;
 %       1) energyBySource = [MWh] energy each state produces by source
 
 
-%Load emmision rates data [lb/MWh]
+% Load emmision rates data [lb/MWh]
 [emissionsRates,labels] = xlsread("egrid2016_summarytables.xlsx",4);
 emissionsFactors = emissionsRates(1:51,1);
 states = string(labels(5:55,1));
 
-%Load energy output by source [MWh]
+% Load energy output by source [MWh]
 [stateResourceMix, labels] = xlsread("egrid2016_summarytables.xlsx",5);
 
-%list of power Sources
+% List of power Sources
 powerSources = labels(3,4:14);
 
-%power sources percentages
+% Power sources percentages
 sourcePercent = stateResourceMix(1:51,3:end);
 
-%total energy for each state [MWh]
+% Total energy for each state [MWh]
 energyTotals = stateResourceMix(1:51,2);
 
-%energy consumption by source for each state
+% Energy consumption by source for each state
 energyBySource = energyTotals .* sourcePercent;
 
-%emissions totals for each state
+%Emissions totals for each state
 totalEmissions = energyTotals .* emissionsFactors;
 
 
 
 
 
-% ----------- Map Visualization of States Emissions --------------- %
-
-% TODO:
-% Maybe do:
-%   1) experiment with initial map size on different computers
-
+% ----------- Load in statesCenters data ---------------- %
 latlng = xlsread("statesCenters.xlsx");
 lat = latlng(:,1);
 lng = latlng(:,2);
 
-%get largest power source for each state
-[temp,sourceIdx] = max(sourcePercent,[],2);
-largestSources = string(powerSources(sourceIdx))';
-
-% Setup for the map (create a table)
-dataTable = table(lat, lng,totalEmissions,largestSources);
-dataTable.Properties.VariableNames = {'Latitude', 'Longitude',...
-                        'CO2Emissions','MajorSource'};
-dataTable.MajorSource = categorical(dataTable.MajorSource);
-              
 
 % This makes the initial map larger
 figh = figure(1);
@@ -76,58 +61,68 @@ pos = get(figh,'position');
 set(figh,'position',[pos(1:2)/2 pos(3:4)*1.5])
 
 
-% Create the map
-geobubble(dataTable, 'Latitude','Longitude',...
-        'SizeVariable','CO2Emissions',...
-        'ColorVariable','MajorSource',...
-        'Title',"CO2 Emissions For Each State",...
-        'ColorLegendTitle','Largest Energy Source',...
-        'SizeLegendTitle','Emissions [lb CO2]',...
-        'BubbleWidthRange',[4,25],...
-        'ScaleBarVisible',false,'GridVisible',false);
-    
 
-     
-    
+
+% ----------- Map Visualization of States Emissions --------------- %
+% Get largest power source for each state
+[temp,sourceIdx] = max(sourcePercent,[],2);
+largestSources = string(powerSources(sourceIdx))';
+
+% Setup for the map (create a table)
+data = {lat, lng, totalEmissions, largestSources};
+labels = ["CO2Emissions", "MajorSource"];
+titles = ["CO2 Emissions For Each State", "Emissions [lb CO2]", "Largest Energy Source"];
+
+CreateMap(data,labels,titles,[4,25]);
+  
+
+
 
 % ---------- Map Visualization of particular power source --------- %
 
 % TODO:
 %   1) Change sizes of bubbles so scale is same for every power source.
-%   2) fire warning if user makes no choice and closes window
-%   3) add escape for exit loop
 
+source = menu("View a particular power source?", ['Move to Next Step',powerSources]);
 
-source = menu("View a particular power source?", powerSources);
-totalMaxEnergy = max(max(energyBySource));
-
-while(source ~= 0)
-    % Create table for map
-    srcTable = table(lat, lng,energyBySource(:,source));
-    srcTable.Properties.VariableNames = {'Latitudes', 'Longitudes','EnergyProduced'};
-    
-    %unique titles for current source
-    sizeTitle = sprintf("%s production [MWh]",string(powerSources(source)));
-    mainTitle = sprintf("States Energy Production from %s",string(powerSources(source)));
-    
-    % This creates a standard size, so 2 different sources are
-    %   on the same size scale
-    bubbleRatio = max(energyBySource(:,source)) / totalMaxEnergy;
-    maxBubbleSize = 3 + ceil(bubbleRatio*35);
-    
-    % Create map
-    geobubble(srcTable,'Latitudes','Longitudes',...
-                    'SizeVariable','EnergyProduced',...
-                    'SizeLegendTitle',sizeTitle,...
-                    'Title',mainTitle,...
-                    'GridVisible',false,...
-                    'ScaleBarVisible',false,'BubbleWidthRange',[1,maxBubbleSize]);
-        
-    source = menu("View another power source on map?", powerSources);
+% Validate selection
+if(source == 0)
+    warning("No option selected, moving to next step");
 end
 
 
+while(source > 0)
+    source = source - 1;
+    
+    % Construct unique titles for current source
+    sizeTitle = sprintf("%s production [MWh]",string(powerSources(source)));
+    mainTitle = sprintf("States Energy Production from %s",string(powerSources(source)));
+    
+    %setup inputs for map function
+    data = {lat, lng, energyBySource(:,source)};
+    labels = "EnergyProduced";
+    titles = [mainTitle, sizeTitle];
+    
+    %get bubble scale
+    bubbleScale = calcBubbleSize(energyBySource,source);
 
+    % Create map
+    CreateMap(data,labels,titles,bubbleScale);
+       
+    
+    % Ask user to repeat
+    source = menu("View another power source on map?", ['Move to Next Step',powerSources]);
+    
+    % Validate selection
+    if(source == 0)
+        warning("No option selected, moving to next step");
+    elseif source == 1
+        break;
+    end
+end
+
+
+%%
 
 
 % ---------- States Side by Side comparison ------------- %
