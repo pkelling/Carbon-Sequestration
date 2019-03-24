@@ -122,20 +122,20 @@ while(source > 0)
 end
 
 
-%%
+
+
 
 
 % ---------- States Side by Side comparison ------------- %
 
 % TODO:
-%   1) **Validate User Input**
+%   1) Validate User Input
 %   2) Change to loop so you can select different states.
 %   3) Make chart based on actual energy output, not percent of output
 %       -This will help give a better idea of energy output differences
 %       between states
-% maybe do:
-%   1) Change colors so they match resource (coal->black, hydro->blue...)
-%   2) 
+%   4) Change colors so they match resource (coal->black, hydro->blue...)
+
 
 choice = menu("Compare state power sources?","yes","no");
 
@@ -152,6 +152,10 @@ if choice == 1
         warning("No state selected, moving to next step.");
     end
 end
+
+
+
+
 
 
 
