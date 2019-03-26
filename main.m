@@ -190,35 +190,26 @@ percentInState(blankLines,:) = [];
 
 
 
-% -------- Find Storage Volume By State ------------ %
-
+% -------- Convert to lbs storage by state ------------ %
 % TODO:
 %   1) Convert Storage to lbs CO2 for each site
 %   2) Get total lbs of storage for each state
 
 
-
 % ------------ Map lbs storage by state ------------- %
-%           Along with lbs emissions ????
-%   Possible: select between 3 maps: min, M likely, and max storage?
 
 
 
-% ----------- Plot storage over years ------------ %
+% ----------- Calculate storage over years ------------ %
 %   -Using 100% storage rate plot storage over time to see when storage
 %   fills up
-%   -Then, ask user to input % of emissions stored per year 
-%   OR
-%   -Ask user to enter increase in emissions stored per year (% increase)
-%   plot storage and emissions over time
 
 
-% ----------- Add in a rate of change in emissions -----------%
-%   Ask user to input an emissions rate of change per year
-%   -using that, and previous value of % emissions stored (or % increase
-%   stored), plot storage and emissions over time to get a final idea of
-%   how effective carbon sequestration will be at dealing with the
-%   emissions problem.
+% -------- Calculate emissions with user defined change ------- %
+
+
+% ----------- Add in a rate of storage -----------%
+
 
 
 
