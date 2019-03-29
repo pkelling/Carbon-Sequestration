@@ -203,15 +203,21 @@ MMbbl = bbl./1000000; %[MMbbl] converting bbl to MMbbl
 mass = Densities.*MMbbl.*6.28981; % [kg] mult. density by MMbbl converted to m^3
 lbs = mass.*2.20462; % [lbs] converting kg to lbs 
 
+
+[rowx,coly] = size(stateWithStorage);
+
 help = unique(stateWithStorage); %assembling vector with all unique state names
 percentInState(isnan(percentInState)) = 0; %changing NaN elements into 0 in order to perform operations
 
 me = 0;
 pls = [];
+mult = [];
 for k = 1:length(help)
     [ex,why] = find(stateWithStorage == help(k)); %using find function to find [row,col] in order to index
     for p = 1:length(ex)
+        
         me = me +(lbs(ex(p),1).*(percentInState(ex(p),(why(p))))/100); %getting total storage for state(k)
+        
     end
     pls = [pls,(me)]; %creating vector of storage for states
     me = 0; %reseting in order to calc. total of next state
