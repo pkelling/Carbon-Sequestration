@@ -204,6 +204,7 @@ mass = Densities.*MMbbl.*6.28981; % [kg] mult. density by MMbbl converted to m^3
 lbs = mass.*2.20462; % [lbs] converting kg to lbs 
 
 help = unique(stateWithStorage); %assembling vector with all unique state names
+help(cellfun('isempty',help)) = [];
 percentInState(isnan(percentInState)) = 0; %changing NaN elements into 0 in order to perform operations
 
 me = 0;
@@ -218,6 +219,7 @@ for k = 1:length(help)
 end
  
 M = containers.Map(help,pls); %assigning states with their respective total storage capacity
+
 
 % ------------ Map lbs storage by state ------------- %
 %           Along with lbs emissions ????
