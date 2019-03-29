@@ -175,7 +175,9 @@ end
 
 stateWithStorage = string(labels(9:280,93:2:107));
 percentInState = numbers(1:272,92:2:106);
-storageCapacity = numbers(1:272,2);
+minStorageCapacity = numbers(1:272,1);
+likelyStorageCapacity = numbers(1:272,2);
+maxStorageCapacity = numbers(1:272,3);
 
 Volumes = numbers(1:272,14);
 Densities = numbers(1:272,22);
@@ -188,7 +190,9 @@ Volumes(blankLines) = [];
 Densities(blankLines) = [];
 stateWithStorage(blankLines,:) = [];
 percentInState(blankLines,:) = [];
-storageCapacity(blankLines) = [];
+minStorageCapacity(blankLines) = [];
+likelyStorageCapacity(blankLines) = [];
+maxStorageCapacity(blankLines) = [];
 
 % -------- Find Storage Volume By State ------------ %
 
@@ -197,28 +201,67 @@ storageCapacity(blankLines) = [];
 %   2) Get total lbs of storage for each state
 
 %calculations
-bbl = storageCapacity.*7758.37; % [bbl] converting acres sq.ft. to bbl (barrels of oil) 
+bbl = likelyStorageCapacity.*7758.37; % [bbl] converting acres sq.ft. to bbl (barrels of oil) 
 MMbbl = bbl./1000000; %[MMbbl] converting bbl to MMbbl
 %m = D.*v
 mass = Densities.*MMbbl.*6.28981; % [kg] mult. density by MMbbl converted to m^3
-lbs = mass.*2.20462; % [lbs] converting kg to lbs 
+AVGlbs = mass.*2.20462; % [lbs] converting kg to lbs 
+
+bbl = minStorageCapacity.*7758.37; % [bbl] converting acres sq.ft. to bbl (barrels of oil) 
+MMbbl = bbl./1000000; %[MMbbl] converting bbl to MMbbl
+%m = D.*v
+mass = Densities.*MMbbl.*6.28981; % [kg] mult. density by MMbbl converted to m^3
+MINlbs = mass.*2.20462; % [lbs] converting kg to lbs 
+
+bbl = maxStorageCapacity.*7758.37; % [bbl] converting acres sq.ft. to bbl (barrels of oil) 
+MMbbl = bbl./1000000; %[MMbbl] converting bbl to MMbbl
+%m = D.*v
+mass = Densities.*MMbbl.*6.28981; % [kg] mult. density by MMbbl converted to m^3
+MAXlbs = mass.*2.20462; % [lbs] converting kg to lbs 
+
+
+[rowx,coly] = size(stateWithStorage);
+
+%Correcting mispelled state names
+for i = 1:rowx
+    for j = 1:coly
+        if stateWithStorage(i,j) == 'Utah '
+            stateWithStorage(i,j) = 'Utah';
+        end
+        if stateWithStorage(i,j) == 'Pensylvania'
+            stateWithStorage(i,j) = 'Pennsylvania';
+        end
+    end
+end
 
 help = unique(stateWithStorage); %assembling vector with all unique state names
 help(cellfun('isempty',help)) = [];
 percentInState(isnan(percentInState)) = 0; %changing NaN elements into 0 in order to perform operations
 
-me = 0;
-pls = [];
+me1 = 0;
+me2 = 0;
+me3 = 0;
+MINstateStorage = [];
+AVGstateStorage = [];
+MAXstateStorage = [];
 for k = 1:length(help)
     [ex,why] = find(stateWithStorage == help(k)); %using find function to find [row,col] in order to index
     for p = 1:length(ex)
-        me = me +(lbs(ex(p),1).*(percentInState(ex(p),(why(p))))/100); %getting total storage for state(k)
+        me1 = me1 +(MINlbs(ex(p),1).*(percentInState(ex(p),(why(p))))/100); %getting total storage for state(k)
+        me2 = me2 +(AVGlbs(ex(p),1).*(percentInState(ex(p),(why(p))))/100); %getting total storage for state(k)
+        me3 = me3 +(MAXlbs(ex(p),1).*(percentInState(ex(p),(why(p))))/100); %getting total storage for state(k)
     end
-    pls = [pls,(me)]; %creating vector of storage for states
-    me = 0; %reseting in order to calc. total of next state
+    MINstateStorage = [MINstateStorage,(me1)];
+    AVGstateStorage = [AVGstateStorage,(me2)];
+    MAXstateStorage = [MAXstateStorage,(me3)];                                         %creating vector of storage for states
+    me1 = 0;
+    me2 = 0;
+    me3 = 0; %reseting in order to calc. total of next state
 end
  
-M = containers.Map(help,pls); %assigning states with their respective total storage capacity
+mapMIN = containers.Map(help,MINstateStorage); %assigning states with their respective total storage capacity
+mapAVG = containers.Map(help,AVGstateStorage); %assigning states with their respective total storage capacity
+mapMAX = containers.Map(help,MAXstateStorage); %assigning states with their respective total storage capacity
 
 
 % ------------ Map lbs storage by state ------------- %
