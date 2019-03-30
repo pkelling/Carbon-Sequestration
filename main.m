@@ -175,9 +175,9 @@ end
 
 stateWithStorage = string(labels(9:280,93:2:107));
 percentInState = numbers(1:272,92:2:106);
-minStorageCapacity = numbers(1:272,1);
-likelyStorageCapacity = numbers(1:272,2);
-maxStorageCapacity = numbers(1:272,3);
+minStorageCapacity = numbers(1:272,13);
+likelyStorageCapacity = numbers(1:272,14);
+maxStorageCapacity = numbers(1:272,15);
 
 Volumes = numbers(1:272,14);
 Densities = numbers(1:272,22);
@@ -194,30 +194,24 @@ minStorageCapacity(blankLines) = [];
 likelyStorageCapacity(blankLines) = [];
 maxStorageCapacity(blankLines) = [];
 
-% -------- Convert to lbs storage by state ------------ %
+% -------- Find Storage Volume By State ------------ %
+
 % TODO:
 %   1) Convert Storage to lbs CO2 for each site
 %   2) Get total lbs of storage for each state
 
 %calculations
-bbl = likelyStorageCapacity.*7758.37; % [bbl] converting acres sq.ft. to bbl (barrels of oil) 
-MMbbl = bbl./1000000; %[MMbbl] converting bbl to MMbbl
 %m = D.*v
-mass = Densities.*MMbbl.*6.28981; % [kg] mult. density by MMbbl converted to m^3
+mass = Densities.*likelyStorageCapacity.*6.28981; % [kg] mult. density by MMbbl converted to m^3
 AVGlbs = mass.*2.20462; % [lbs] converting kg to lbs 
 
-bbl = minStorageCapacity.*7758.37; % [bbl] converting acres sq.ft. to bbl (barrels of oil) 
-MMbbl = bbl./1000000; %[MMbbl] converting bbl to MMbbl
 %m = D.*v
-mass = Densities.*MMbbl.*6.28981; % [kg] mult. density by MMbbl converted to m^3
+mass = Densities.*minStorageCapacity.*6.28981; % [kg] mult. density by MMbbl converted to m^3
 MINlbs = mass.*2.20462; % [lbs] converting kg to lbs 
 
-bbl = maxStorageCapacity.*7758.37; % [bbl] converting acres sq.ft. to bbl (barrels of oil) 
-MMbbl = bbl./1000000; %[MMbbl] converting bbl to MMbbl
 %m = D.*v
-mass = Densities.*MMbbl.*6.28981; % [kg] mult. density by MMbbl converted to m^3
+mass = Densities.*maxStorageCapacity.*6.28981; % [kg] mult. density by MMbbl converted to m^3
 MAXlbs = mass.*2.20462; % [lbs] converting kg to lbs 
-
 
 [rowx,coly] = size(stateWithStorage);
 
@@ -237,12 +231,13 @@ help = unique(stateWithStorage); %assembling vector with all unique state names
 help(cellfun('isempty',help)) = [];
 percentInState(isnan(percentInState)) = 0; %changing NaN elements into 0 in order to perform operations
 
-me1 = 0;
+me1 = 0; %creating empty vectors for use in nested for loop
 me2 = 0;
 me3 = 0;
 MINstateStorage = [];
 AVGstateStorage = [];
 MAXstateStorage = [];
+
 for k = 1:length(help)
     [ex,why] = find(stateWithStorage == help(k)); %using find function to find [row,col] in order to index
     for p = 1:length(ex)
