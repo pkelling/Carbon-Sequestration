@@ -30,7 +30,6 @@ states = string(labels(5:55,1));
 % Load energy output by source [MWh]
 [stateResourceMix, labels] = xlsread("egrid2016_summarytables.xlsx",5);
 
-
 % List of power Sources
 powerSources = labels(3,4:14);
 renewSources = ["Renewable", "Nonrenewable", "Other Unknown/Purchased Fuel"];
