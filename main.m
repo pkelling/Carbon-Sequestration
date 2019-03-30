@@ -317,6 +317,7 @@ S=[S;Proj]
 end 
 
 Total_EMISSION=ones(length(N_Years))* SUM_EMISSION
+subplot(2,1,1);
 plot(N_Years,Total_EMISSION,'--r','LineWidth',2)
 
 hold on 
@@ -328,6 +329,86 @@ grid on
 %   stored), plot storage and emissions over time to get a final idea of
 %   how effective carbon sequestration will be at dealing with the
 %   emissions problem.
+
+% ---------------------------------Part 3 - 2 Projection------------------------------------------ %
+again = 1;
+while again ==1
+        inputUser = {'Enter expected CO2 storage percent per year [0% - 10%]: ','Enter storage capability growth rate percent [0% - 10%]: '};
+        dlgtitle = 'Info';
+        dmsion = [1 75];
+        defaultInput = {'',''};
+        % Output vector of user input
+        outputBox = inputdlg(inputUser,dlgtitle,dmsion,defaultInput);
+        % Convert cell value to double
+        output_Box = str2double(outputBox);
+        output_Box(1) = output_Box(1)/100;
+        output_Box(2) = output_Box(2)/100;
+
+        % msg of data validation
+        reinputUser = {'Re-enter expected storage percent per year [0% - 10%]: ','Re-enter storage capability growth rate percent [0% - 10%]: '};
+
+        % Data validation [0% - 10%] - While Loop
+                % output_Box(1) = Enter expected CO2 storage percent per year [0% - 10%]
+                % output_Box(2) = Enter storage capability growth rate percent [0% - 10%]
+                % output_Box(3) = Enter base-line capacity storage [BBLML]
+                while output_Box(1) < 0 || output_Box(1) > 10 || output_Box(2) < 0 || output_Box(2) > 10
+                    % Output vector of user input
+                    outputBox = inputdlg(inputUser,dlgtitle,dmsion,defaultInput);
+                    % Convert cell value to double
+                    output_Box = str2double(outputBox);
+                    output_Box(1) = output_Box(1)/100;
+                    output_Box(2) = output_Box(2)/100;
+                end    
+        rate_Growth_CO2 = output_Box(1)/100;  
+        num_Year = length(N_Years);
+        for u = 1:1:num_Year       
+                % Calculate amount of CO2 stored with provided percentage
+                Projected_StorageCO2(u) = totalEmissions(u) .* rate_Growth_CO2;
+                rate_Growth_CO2 = rate_Growth_CO2 + output_Box(2);
+                
+        end    
+        
+        Projected_StorageCO2 = Projected_StorageCO2';
+        Total_Projected_StorageCO2 = Projected_StorageCO2 + S;
+        
+        x_Axis = 1:1:num_Year;
+        subplot(2,1,2);
+        plot(x_Axis, Total_Projected_StorageCO2);
+        xlabel('Year');
+        ylabel('Emission');
+        hold on
+        plot(x_Axis, S);
+        
+%         % Comparison
+%         if  new_Projected_Cap > stored_Projected_CO2
+%             excess_Cap = new_Projected_Cap - stored_Projected_CO2;
+%             msg_Out = sprintf('Extra storage capacity is %0.2f [BBBML]',excess_Cap);
+% %           fprintf('The amount of capacity shortage is %0.2f [BBBML]',excess_Cap)
+%         elseif new_Projected_Cap < stored_Projected_CO2
+%             excess_Cap = abs(new_Projected_Cap - stored_Projected_CO2);
+%             msg_Out  = sprintf('The amount of capacity shortage is %0.2f [BBBML]',excess_Cap);
+% %           fprintf('The amount of capacity shortage is %0.2f [BBBML]',excess_Cap);
+%         elseif new_Projected_Cap == stored_Projected_CO2
+%             excess_Cap = 0;
+%             msg_Out = sprintf('The amount of capacity is the same as projected CO2 can be stored');
+%         end    
+
+%          fprintf('The amount of capacity shortage is %0.2f [BBBML]',excess_Cap);
+%          tot_expected_Stored = abs(new_Projected_Cap - stored_Projected_CO2);
+
+%         h=msgbox('Calculation Completed',...
+%                  msg_Out,'custom',icondata,iconcmap);
+%         [addIcon] = imread('mitbeccsflat.jpg'); 
+        
+        % Repeat request
+        rep = menu('Do you want to repeat?', 'Yes', 'No');
+        if rep == 1
+        elseif rep == 2
+          again =2;
+        end
+
+
+end
 
 
 
