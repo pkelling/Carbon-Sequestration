@@ -30,13 +30,9 @@ states = string(labels(5:55,1));
 %Load energy output by source [MWh]
 [stateResourceMix, labels] = xlsread("egrid2016_summarytables.xlsx",5);
 
-%list of renewable, nonrenewable, and unknown resources
-nonrenewableSources = sum(stateResourceMix(1:51, 3:6));
-renewableSources = sum(stateResourceMix(1:51, 7:12));
-unknownSources = stateResourceMix(1:51, 13);
-
 %list of power Sources
 powerSources = labels(3,4:14);
+renewSources = ["Renewable", "Nonrenewable", "Other Unknown/Purchased Fuel"];
 
 %power sources percentages
 sourcePercent = stateResourceMix(1:51,3:end);
@@ -50,6 +46,11 @@ energyBySource = energyTotals .* sourcePercent;
 %emissions totals for each state
 totalEmissions = energyTotals .* emissionsFactors;
 
+%list of renewable, nonrenewable, and unknown resources
+renewableSources = energyTotals .* sum((stateResourceMix(1:51, 7:12)),2);
+nonrenewableSources = energyTotals .* sum((stateResourceMix(1:51, 3:6)),2);
+unknownSources = energyTotals .* stateResourceMix(1:51, 13);
+groupSources = [renewableSources, nonrenewableSources, unknownSources];
 
 
 
@@ -147,21 +148,31 @@ end
 %   1) Change colors so they match resource (coal->black, hydro->blue...)
 %   2) 
 
-choice = menu("Compare state power sources?","yes","no");
-
+choice = menu("Compare state energy sources?","Yes","No");
 if choice == 1
     stateNum = listdlg('PromptString',"Please select state(s)", 'ListString',states);
-    
-    if(~isempty(stateNum))
+       renew = menu("Would you like to compare renewable and nonrenewable sources", 'Yes', 'No');
         
-        barh(categorical(states(stateNum)),energyBySource(stateNum,:),'stacked');
-        legend(powerSources);
-        title("Emissions sources by state");
-        xlabel("Enegery Generated per Resource [MWh]");
-        ylabel("State");
-    else
-        warning("No state selected, moving to next step.");
-    end
+        while stateNum == 1
+            warning("Cannot compare a single state by itself. Please select more states");
+            stateNum = listdlg('PromptString',"Please select state(s)", 'ListString',states);
+        end
+            if(~isempty(stateNum)) && renew == 1
+                barh(categorical(states(stateNum)),groupSources(stateNum,:),'stacked');
+                legend(renewSources);
+                title("Energy Generation by Sources Per State");
+                xlabel("Energy Generated per Resource [MWh]");
+                ylabel("State");
+            elseif(~isempty(stateNum)) && renew == 2
+                barh(categorical(states(stateNum)),energyBySource(stateNum,:),'stacked');
+                legend(powerSources);
+                title("Energy Generation by Sources Per State");
+                xlabel("Energy Generated per Resource [MWh]");
+                ylabel("State");
+            else
+                warning("No state selected, moving to next step.");
+            end
+       
 end
 
 
