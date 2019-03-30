@@ -215,6 +215,11 @@ minStorageCapacity(blankLines) = [];
 likelyStorageCapacity(blankLines) = [];
 maxStorageCapacity(blankLines) = [];
 
+volumesMin(blankLines) = [];
+volumesMax(blankLines) = [];
+densitiesMin(blankLines) = [];
+densitiesMax(blankLines) = [];
+
 
 % -------- Find Storage Volume By State ------------ %
 
@@ -309,10 +314,9 @@ Time_Years_likely = Storage_US_likely / emission_US;
 Time_Years_min = Storage_US_min / emission_US;
 Time_Years_max = Storage_US_max / emission_US;
 
-fprintf('%0.0f years will be required to completely fill the storage for min storage capacity.\n' , Time_Years_min);
+fprintf('%0.0f years will be required to completely fill the storage for the minimum estimated storage capacity.\n' , Time_Years_min);
 fprintf('%0.0f years will be required to completely fill the storage for likely storage capacity.\n' , Time_Years_likely);
-fprintf('%0.0f years will be required to completely fill the storage for max storage capacity.\n\n' , Time_Years_max);
-
+fprintf('%0.0f years will be required to completely fill the storage for maximum estimated storage capacity.\n\n' , Time_Years_max);
 
 
 
