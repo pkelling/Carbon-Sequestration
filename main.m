@@ -272,6 +272,21 @@ CreateMap(data,labels,titles,[3,20]);
 
 
 
+%------------ find the         -------------- %
+
+% the total U.S emission per year [lb/year]
+emisssion_US = sum(totalEmissions);
+
+% the total U.S storage [lb]
+Storage_U.S = sum(ConversionFunction(Vol,Denst));
+
+%Number of years required to store the U.S emission
+
+num_Years = Storage_US / emission_US;
+
+
+
+
 
 % ----------- Calculate storage over years ------------ %
 %   -Using 100% storage rate plot storage over time to see when storage
