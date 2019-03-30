@@ -234,13 +234,12 @@ help = unique(stateWithStorage); %assembling vector with all unique state names
 help(cellfun('isempty',help)) = [];
 percentInState(isnan(percentInState)) = 0; %changing NaN elements into 0 in order to perform operations
 
-me1 = 0; %creating empty vectors for use in nested for loop
+me1 = 0;
 me2 = 0;
 me3 = 0;
 MINstateStorage = [];
 AVGstateStorage = [];
 MAXstateStorage = [];
-
 for k = 1:length(help)
     [ex,why] = find(stateWithStorage == help(k)); %using find function to find [row,col] in order to index
     for p = 1:length(ex)
@@ -260,15 +259,33 @@ mapMIN = containers.Map(help,MINstateStorage); %assigning states with their resp
 mapAVG = containers.Map(help,AVGstateStorage); %assigning states with their respective total storage capacity
 mapMAX = containers.Map(help,MAXstateStorage); %assigning states with their respective total storage capacity
 
+% %12-2 office hours
+
+% ------------ Map lbs storage by state ------------- %
+%           Along with lbs emissions ????
+%   Possible: select between 3 maps: min, M likely, and max storage?
+
+shortStatesAbbr = ["AL";"AK";"AR";"CA";"CO";"FL";"GA";"ID";"IL";"IN";"KS";"KY";"LA";"MD";"MI";"MS";"MO";"MT";"NE";"NJ";"NM";"NY";"NC";"ND";"OH";"OK";"OR";"PA";"SC";"SD";"TX";"UT";"VA";"WA";"WV";"WY"];
+shortStatesNames = help;
+storeLats = [];
+storeLngs = [];
+
+for i = 1:length(shortStatesNames)
+   locInStatesVar = find( strcmpi(states, shortStatesAbbr));
+   storeLats = [storeLats, lat(locInStatesVar)];
+   storeLngs = [storeLngs, lng(locInStatesVar)];
+end
+
+
+% Setup for the map
+data = {storeLats, storeLngs, AVGstateStorage};
+labels = ["LbsStorage"];
+titles = ["Lbs Storage For Each State", "Storage [lbs CO2]"];
+
+CreateMap(data,labels,titles,[4,25]);
 
 % ------------ Map lbs storage by state ------------- %
 
-
-data = {lat, lng, totalEmissions, largestSources};
-labels = ["CO2Emissions", "MajorSource"];
-titles = ["CO2 Emissions For Each State", "Emissions [lb CO2]", "Largest Energy Source"];
-
-CreateMap(data,labels,titles,[3,20]);
 
 
 
@@ -306,14 +323,14 @@ Growth_rate= input('Enter a percent change of CO2 emission per year between (-5)
 
 
 while  Growth_rate < -5 || Growth_rate > 5 
-    warning(sprintf('You entered %0.2f, Please consider entering a value between (-5)-5%',Growth_rate))
+    warning(sprintf('You entered %0.2f, Please consider entering a value between (-5)-5%',Growth_rate));
     Growth_rate= input('Enter a percent change of CO2 emission per year between (-5)-5%:   ');
 end 
 
 N_Years= input('Enter the number of years for the projection:');
 
 while N_Years <= 0
-    warning(sprintf('You entered %0.0f, Please consider entering a value greater than zero',N_Years))
+    warning(sprintf('You entered %0.0f, Please consider entering a value greater than zero',N_Years));
     N_Years= input('Enter the number of years for the projection:');
 end 
 
@@ -321,17 +338,17 @@ Growth_rate= Growth_rate/100+1;
 N_Years= 1:N_Years;
 
 S=[];
-S_Y=[]
-SUM_EMISSION= sum(totalEmissions )
+S_Y=[];
+SUM_EMISSION= sum(totalEmissions );
 for i= 1:length(N_Years)
 
 Proj= Growth_rate * SUM_EMISSION* N_Years(i);
 
-S=[S;Proj]
+S=[S;Proj];
 
 end 
 
-Total_EMISSION=ones(length(N_Years))* SUM_EMISSION
+Total_EMISSION=ones(length(N_Years))* SUM_EMISSION;
 plot(N_Years,Total_EMISSION,'--r','LineWidth',2)
 
 hold on 
