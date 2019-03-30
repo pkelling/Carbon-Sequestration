@@ -73,7 +73,6 @@ set(figh,'position',[pos(1:2)/2 pos(3:4)*1.5])
 
 
 
-
 % ----------- Map Visualization of States Emissions --------------- %
 % Get largest power source for each state
 [temp,sourceIdx] = max(sourcePercent,[],2);
@@ -200,8 +199,12 @@ maxStorageCapacity = numbers(1:272,15);
 Volumes = numbers(1:272,14);
 Densities = numbers(1:272,22);
 
-% -- Validate Data 
+volumesMin = numbers(1:272,13);
+volumesMax = numbers(1:272,15);
+densitiesMin = numbers(1:272,21);
+densitiesMax = numbers(1:272,23);
 
+% -- Validate Data 
 % Remove lines where Volume is Nan (they were blank lines)
 blankLines = find(isnan(Volumes));
 Volumes(blankLines) = [];
@@ -270,10 +273,6 @@ for k = 1:length(help)
     me2 = 0;
     me3 = 0; %reseting in order to calc. total of next state
 end
- 
-mapMIN = containers.Map(help,MINstateStorage); %assigning states with their respective total storage capacity
-mapAVG = containers.Map(help,AVGstateStorage); %assigning states with their respective total storage capacity
-mapMAX = containers.Map(help,MAXstateStorage); %assigning states with their respective total storage capacity
 
 
 % ------------ Map lbs storage by state ------------- %
@@ -284,7 +283,6 @@ labels = ["CO2Emissions", "MajorSource"];
 titles = ["CO2 Emissions For Each State", "Emissions [lb CO2]", "Largest Energy Source"];
 
 CreateMap(data,labels,titles,[3,20]);
-
 
 
 
@@ -424,17 +422,4 @@ while again ==1
 
 
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
 
