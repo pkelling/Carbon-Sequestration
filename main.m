@@ -101,7 +101,7 @@ if(source == 0)
 end
 
 
-while(source > 0)
+while(source > 1)
     source = source - 1;
     
     % Construct unique titles for current source
@@ -215,6 +215,7 @@ minStorageCapacity(blankLines) = [];
 likelyStorageCapacity(blankLines) = [];
 maxStorageCapacity(blankLines) = [];
 
+
 % -------- Find Storage Volume By State ------------ %
 
 % TODO:
@@ -222,17 +223,9 @@ maxStorageCapacity(blankLines) = [];
 %   2) Get total lbs of storage for each state
 
 %calculations
-%m = D.*v
-mass = Densities.*likelyStorageCapacity.*6.28981; % [kg] mult. density by MMbbl converted to m^3
-AVGlbs = mass.*2.20462; % [lbs] converting kg to lbs 
-
-%m = D.*v
-mass = Densities.*minStorageCapacity.*6.28981; % [kg] mult. density by MMbbl converted to m^3
-MINlbs = mass.*2.20462; % [lbs] converting kg to lbs 
-
-%m = D.*v
-mass = Densities.*maxStorageCapacity.*6.28981; % [kg] mult. density by MMbbl converted to m^3
-MAXlbs = mass.*2.20462; % [lbs] converting kg to lbs 
+MINlbs = ConversionFunction(minStorageCapacity,Densities);
+AVGlbs = ConversionFunction(likelyStorageCapacity,Densities); % [lbs] converting kg to lbs
+MAXlbs = ConversionFunction(maxStorageCapacity,Densities); % [lbs] converting kg to lbs 
 
 [rowx,coly] = size(stateWithStorage);
 
@@ -252,13 +245,12 @@ help = unique(stateWithStorage); %assembling vector with all unique state names
 help(cellfun('isempty',help)) = [];
 percentInState(isnan(percentInState)) = 0; %changing NaN elements into 0 in order to perform operations
 
-me1 = 0; %creating empty vectors for use in nested for loop
+me1 = 0;
 me2 = 0;
 me3 = 0;
 MINstateStorage = [];
 AVGstateStorage = [];
 MAXstateStorage = [];
-
 for k = 1:length(help)
     [ex,why] = find(stateWithStorage == help(k)); %using find function to find [row,col] in order to index
     for p = 1:length(ex)
@@ -273,34 +265,61 @@ for k = 1:length(help)
     me2 = 0;
     me3 = 0; %reseting in order to calc. total of next state
 end
-
+ 
 
 % ------------ Map lbs storage by state ------------- %
 
+shortStatesAbbr = ["AL";"AK";"AR";"CA";"CO";"FL";"GA";"ID";"IL";"IN";"KS";"KY";"LA";"MD";"MI";"MS";"MO";"MT";"NE";"NJ";"NM";"NY";"NC";"ND";"OH";"OK";"OR";"PA";"SC";"SD";"TX";"UT";"VA";"WA";"WV";"WY"];
+shortStatesNames = help;
+storeLats = [];
+storeLngs = [];
 
-data = {lat, lng, totalEmissions, largestSources};
-labels = ["CO2Emissions", "MajorSource"];
-titles = ["CO2 Emissions For Each State", "Emissions [lb CO2]", "Largest Energy Source"];
+for i = 1:length(shortStatesNames)
+   locInStatesVar = find( strcmpi(states, shortStatesAbbr(i)));
+   storeLats = [storeLats; lat(locInStatesVar)];
+   storeLngs = [storeLngs; lng(locInStatesVar)];
+end
 
-CreateMap(data,labels,titles,[3,20]);
+% Setup for the map
+stateStorage = [MINstateStorage', AVGstateStorage', MAXstateStorage'];      
+choice = menu("View Storage By State",["Minimum Projection","Likely Projection","Maximum Projection","Next Step"]);
+
+while(choice ~= 0 && choice ~= 4)
+    data = {storeLats, storeLngs, stateStorage(:,choice)};
+    labels = ["LbsStorage"];
+    titles = ["Lbs Storage For Each State", "Storage [lbs CO2]"];
+    CreateMap(data,labels,titles,[4,25]);
+    choice = menu("View Storage By State",["Minimum Projection","Likely Projection","Maximum Projection","Next Step"]);
+end
 
 
 
-% ----------- Calculate storage over years ------------ %
-%   -Using 100% storage rate plot storage over time to see when storage
-%   fills up
-%   -Then, ask user to input % of emissions stored per year 
-%   OR
-%   -Ask user to enter increase in emissions stored per year (% increase)
-%   plot storage and emissions over time
+%------------ find the number of year to store 100 % of U.S emission -------------- %
+
+% the total U.S emission per year [lb/year]
+emission_US = sum(totalEmissions);
+
+% the total U.S storage [lb]
+Storage_US_likely = sum(ConversionFunction(Volumes,Densities));
+Storage_US_min = sum(ConversionFunction(volumesMin,densitiesMin));
+Storage_US_max = sum(ConversionFunction(volumesMax,densitiesMax));
+
+%Number of years required to store the U.S emission
+Time_Years_likely = Storage_US_likely / emission_US;
+Time_Years_min = Storage_US_min / emission_US;
+Time_Years_max = Storage_US_max / emission_US;
+
+fprintf('%0.0f years will be required to completely fill the storage for min storage capacity.\n' , Time_Years_min);
+fprintf('%0.0f years will be required to completely fill the storage for likely storage capacity.\n' , Time_Years_likely);
+fprintf('%0.0f years will be required to completely fill the storage for max storage capacity.\n\n' , Time_Years_max);
+
+
 
 
 
 % ----------- Add in a rate of change in emissions -----------%
 %
 Growth_rate= input('Enter a percent change of CO2 emission per year between (-5)-5%:  ');
-
-
 
 
 while  Growth_rate < -5 || Growth_rate > 5 
@@ -342,6 +361,8 @@ grid on
 %   stored), plot storage and emissions over time to get a final idea of
 %   how effective carbon sequestration will be at dealing with the
 %   emissions problem.
+
+
 
 % ---------------------------------Part 3 - 2 Projection------------------------------------------ %
 again = 1;
