@@ -81,7 +81,7 @@ CreateMap(data,labels,titles,[4,25]);
 % ---------- Map Visualization of particular power source --------- %
 
 % TODO:
-%   1) Change sizes of bubbles so scale is same for every power source.
+%   1) Make another section for renewable
 
 source = menu("View a particular power source?", ['Move to Next Step',powerSources]);
 
@@ -159,10 +159,6 @@ end
 
 
 
-
-
-
-
 % -------- Load in Carbon Storage data -------------- %
 % Variables:
 %   1) Volumes = contains likely volume of every location
@@ -194,6 +190,9 @@ percentInState(blankLines,:) = [];
 % TODO:
 %   1) Convert Storage to lbs CO2 for each site
 %   2) Get total lbs of storage for each state
+
+
+
 
 
 % ------------ Map lbs storage by state ------------- %
