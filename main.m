@@ -71,94 +71,94 @@ set(figh,'position',[pos(1:2)/2 pos(3:4)*1.5])
 
 % ----------- Map Visualization of States Emissions --------------- %
 % Get largest power source for each state
-[temp,sourceIdx] = max(sourcePercent,[],2);
-largestSources = string(powerSources(sourceIdx))';
-
-% Setup for the map (create a table)
-data = {lat, lng, totalEmissions, largestSources};
-labels = ["CO2Emissions", "MajorSource"];
-titles = ["CO2 Emissions For Each State", "Emissions [lb CO2]", "Largest Energy Source"];
-
-CreateMap(data,labels,titles,[4,25]);
-  
-
-
-
-% ---------- Map Visualization of particular power source --------- %
-
-% TODO:
-%   1) Make another section for renewable
-
-source = menu("View a particular power source?", ['Move to Next Step',powerSources]);
-
-% Validate selection
-if(source == 0)
-    warning("No option selected, moving to next step");
-end
-
-
-while(source > 0)
-    source = source - 1;
-    
-    % Construct unique titles for current source
-    sizeTitle = sprintf("%s production [MWh]",string(powerSources(source)));
-    mainTitle = sprintf("States Energy Production from %s",string(powerSources(source)));
-    
-    %setup inputs for map function
-    data = {lat, lng, energyBySource(:,source)};
-    labels = "EnergyProduced";
-    titles = [mainTitle, sizeTitle];
-    
-    %get bubble scale
-    bubbleScale = calcBubbleSize(energyBySource,source);
-
-    % Create map
-    CreateMap(data,labels,titles,bubbleScale);
-       
-    
-    % Ask user to repeat
-    source = menu("View another power source on map?", ['Move to Next Step',powerSources]);
-    
-    % Validate selection
-    if(source == 0)
-        warning("No option selected, moving to next step");
-    elseif source == 1
-        break;
-    end
-end
-
-
-
-
-
-
-% ---------- States Side by Side comparison ------------- %
-
-% TODO:
-%   1) Validate User Input
-%   2) Change to loop so you can select different states.
-%   3) Make chart based on actual energy output, not percent of output
-%       -This will help give a better idea of energy output differences
-%       between states
-%   4) Change colors so they match resource (coal->black, hydro->blue...)
-
-
-choice = menu("Compare state power sources?","yes","no");
-
-if choice == 1
-    stateNum = listdlg('PromptString',"Please select state(s)", 'ListString',states);
-    
-    if(~isempty(stateNum))
-        
-        barh(categorical(states(stateNum)),energyBySource(stateNum,:),'stacked');
-        legend(powerSources);
-        title("Emissions sources by state");
-        xlabel("Enegery Generated per Resource [MWh]");
-        ylabel("State");
-    else
-        warning("No state selected, moving to next step.");
-    end
-end
+% [temp,sourceIdx] = max(sourcePercent,[],2);
+% largestSources = string(powerSources(sourceIdx))';
+% 
+% % Setup for the map (create a table)
+% data = {lat, lng, totalEmissions, largestSources};
+% labels = ["CO2Emissions", "MajorSource"];
+% titles = ["CO2 Emissions For Each State", "Emissions [lb CO2]", "Largest Energy Source"];
+% 
+% CreateMap(data,labels,titles,[4,25]);
+%   
+% 
+% 
+% 
+% % ---------- Map Visualization of particular power source --------- %
+% 
+% % TODO:
+% %   1) Make another section for renewable
+% 
+% source = menu("View a particular power source?", ['Move to Next Step',powerSources]);
+% 
+% % Validate selection
+% if(source == 0)
+%     warning("No option selected, moving to next step");
+% end
+% 
+% 
+% while(source > 0)
+%     source = source - 1;
+%     
+%     % Construct unique titles for current source
+%     sizeTitle = sprintf("%s production [MWh]",string(powerSources(source)));
+%     mainTitle = sprintf("States Energy Production from %s",string(powerSources(source)));
+%     
+%     %setup inputs for map function
+%     data = {lat, lng, energyBySource(:,source)};
+%     labels = "EnergyProduced";
+%     titles = [mainTitle, sizeTitle];
+%     
+%     %get bubble scale
+%     bubbleScale = calcBubbleSize(energyBySource,source);
+% 
+%     % Create map
+%     CreateMap(data,labels,titles,bubbleScale);
+%        
+%     
+%     % Ask user to repeat
+%     source = menu("View another power source on map?", ['Move to Next Step',powerSources]);
+%     
+%     % Validate selection
+%     if(source == 0)
+%         warning("No option selected, moving to next step");
+%     elseif source == 1
+%         break;
+%     end
+% end
+% 
+% 
+% 
+% 
+% 
+% 
+% % ---------- States Side by Side comparison ------------- %
+% 
+% % TODO:
+% %   1) Validate User Input
+% %   2) Change to loop so you can select different states.
+% %   3) Make chart based on actual energy output, not percent of output
+% %       -This will help give a better idea of energy output differences
+% %       between states
+% %   4) Change colors so they match resource (coal->black, hydro->blue...)
+% 
+% 
+% choice = menu("Compare state power sources?","yes","no");
+% 
+% if choice == 1
+%     stateNum = listdlg('PromptString',"Please select state(s)", 'ListString',states);
+%     
+%     if(~isempty(stateNum))
+%         
+%         barh(categorical(states(stateNum)),energyBySource(stateNum,:),'stacked');
+%         legend(powerSources);
+%         title("Emissions sources by state");
+%         xlabel("Enegery Generated per Resource [MWh]");
+%         ylabel("State");
+%     else
+%         warning("No state selected, moving to next step.");
+%     end
+% end
 
 
 
@@ -271,14 +271,14 @@ storeLats = [];
 storeLngs = [];
 
 for i = 1:length(shortStatesNames)
-   locInStatesVar = find( strcmpi(states, shortStatesAbbr));
-   storeLats = [storeLats, lat(locInStatesVar)];
-   storeLngs = [storeLngs, lng(locInStatesVar)];
+   locInStatesVar = find( strcmpi(states, shortStatesAbbr(i)));
+   storeLats = [storeLats; lat(locInStatesVar)];
+   storeLngs = [storeLngs; lng(locInStatesVar)];
 end
 
 
 % Setup for the map
-data = {storeLats, storeLngs, AVGstateStorage};
+data = {storeLats, storeLngs, MAXstateStorage'};
 labels = ["LbsStorage"];
 titles = ["Lbs Storage For Each State", "Storage [lbs CO2]"];
 
