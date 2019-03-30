@@ -98,7 +98,7 @@ if(source == 0)
 end
 
 
-while(source > 0)
+while(source > 1)
     source = source - 1;
     
     % Construct unique titles for current source
@@ -196,6 +196,11 @@ maxStorageCapacity = numbers(1:272,15);
 Volumes = numbers(1:272,14);
 Densities = numbers(1:272,22);
 
+volumesMin = numbers(1:272,13);
+volumesMax = numbers(1:272,15);
+densitiesMin = numbers(1:272,21);
+densitiesMax = numbers(1:272,23);
+
 % -- Validate Data 
 
 % Remove lines where Volume is Nan (they were blank lines)
@@ -208,6 +213,11 @@ minStorageCapacity(blankLines) = [];
 likelyStorageCapacity(blankLines) = [];
 maxStorageCapacity(blankLines) = [];
 
+volumesMin(blankLines) = [];
+volumesMax(blankLines) = [];
+densitiesMin(blankLines) = [];
+densitiesMax(blankLines) = [];
+
 
 % -------- Find Storage Volume By State ------------ %
 
@@ -216,10 +226,8 @@ maxStorageCapacity(blankLines) = [];
 %   2) Get total lbs of storage for each state
 
 %calculations
-AVGlbs = ConversionFunction(likelyStorageCapacity,Densities); % [lbs] converting kg to lbs 
-
 MINlbs = ConversionFunction(minStorageCapacity,Densities);
-
+AVGlbs = ConversionFunction(likelyStorageCapacity,Densities); % [lbs] converting kg to lbs
 MAXlbs = ConversionFunction(maxStorageCapacity,Densities); % [lbs] converting kg to lbs 
 
 [rowx,coly] = size(stateWithStorage);
@@ -261,15 +269,8 @@ for k = 1:length(help)
     me3 = 0; %reseting in order to calc. total of next state
 end
  
-mapMIN = containers.Map(help,MINstateStorage); %assigning states with their respective total storage capacity
-mapAVG = containers.Map(help,AVGstateStorage); %assigning states with their respective total storage capacity
-mapMAX = containers.Map(help,MAXstateStorage); %assigning states with their respective total storage capacity
-
-% %12-2 office hours
 
 % ------------ Map lbs storage by state ------------- %
-%           Along with lbs emissions ????
-%   Possible: select between 3 maps: min, M likely, and max storage?
 
 shortStatesAbbr = ["AL";"AK";"AR";"CA";"CO";"FL";"GA";"ID";"IL";"IN";"KS";"KY";"LA";"MD";"MI";"MS";"MO";"MT";"NE";"NJ";"NM";"NY";"NC";"ND";"OH";"OK";"OR";"PA";"SC";"SD";"TX";"UT";"VA";"WA";"WV";"WY"];
 shortStatesNames = help;
@@ -281,7 +282,6 @@ for i = 1:length(shortStatesNames)
    storeLats = [storeLats; lat(locInStatesVar)];
    storeLngs = [storeLngs; lng(locInStatesVar)];
 end
-
 
 % Setup for the map
 stateStorage = [MINstateStorage', AVGstateStorage', MAXstateStorage'];      
@@ -295,23 +295,27 @@ while(choice ~= 0 && choice ~= 4)
     choice = menu("View Storage By State",["Minimum Projection","Likely Projection","Maximum Projection","Next Step"]);
 end
 
-% ------------ Map lbs storage by state ------------- %
-
-
 
 
 %------------ find the number of year to store 100 % of U.S emission -------------- %
 
 % the total U.S emission per year [lb/year]
-emisssion_US = sum(totalEmissions);
+emission_US = sum(totalEmissions);
 
 % the total U.S storage [lb]
-Storage_U.S = sum(ConversionFunction(Vol,Denst));
+Storage_US_likely = sum(ConversionFunction(Volumes,Densities));
+Storage_US_min = sum(ConversionFunction(volumesMin,densitiesMin));
+Storage_US_max = sum(ConversionFunction(volumesMax,densitiesMax));
 
 %Number of years required to store the U.S emission
-Time_Years = Storage_US / emission_US;
+Time_Years_likely = Storage_US_likely / emission_US;
+Time_Years_min = Storage_US_min / emission_US;
+Time_Years_max = Storage_US_max / emission_US;
 
-fprintf('%0.0f years will be required to completely fill the storage' , Time_Years);
+fprintf('%0.0f years will be required to completely fill the storage for min storage capacity.\n' , Time_Years_min);
+fprintf('%0.0f years will be required to completely fill the storage for likely storage capacity.\n' , Time_Years_likely);
+fprintf('%0.0f years will be required to completely fill the storage for max storage capacity.\n\n' , Time_Years_max);
+
 
 % ----------- Calculate storage over years ------------ %
 %   -Using 100% storage rate plot storage over time to see when storage
