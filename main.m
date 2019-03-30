@@ -322,15 +322,17 @@ fprintf('%0.0f years will be required to completely fill the storage for max sto
 Growth_rate= input('Enter a percent change of CO2 emission per year between (-5)-5%:  ');
 
 
+
+
 while  Growth_rate < -5 || Growth_rate > 5 
-    warning(sprintf('You entered %0.2f, Please consider entering a value between (-5)-5%',Growth_rate))
+    warning(sprintf('You entered %0.2f, Please consider entering a value between (-5)-5%',Growth_rate));
     Growth_rate= input('Enter a percent change of CO2 emission per year between (-5)-5%:   ');
 end 
 
 N_Years= input('Enter the number of years for the projection:');
 
 while N_Years <= 0
-    warning(sprintf('You entered %0.0f, Please consider entering a value greater than zero',N_Years))
+    warning(sprintf('You entered %0.0f, Please consider entering a value greater than zero',N_Years));
     N_Years= input('Enter the number of years for the projection:');
 end 
 
@@ -338,18 +340,17 @@ Growth_rate= Growth_rate/100+1;
 N_Years= 1:N_Years;
 
 S=[];
-S_Y=[]
-SUM_EMISSION= sum(totalEmissions )
+S_Y=[];
+SUM_EMISSION= sum(totalEmissions );
 for i= 1:length(N_Years)
 
 Proj= Growth_rate * SUM_EMISSION* N_Years(i);
 
-S=[S;Proj]
+S=[S;Proj];
 
 end 
 
-Total_EMISSION=ones(length(N_Years))* SUM_EMISSION
-subplot(2,1,1);
+Total_EMISSION=ones(length(N_Years))* SUM_EMISSION;
 plot(N_Years,Total_EMISSION,'--r','LineWidth',2)
 
 hold on 
