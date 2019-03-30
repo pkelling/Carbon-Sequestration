@@ -197,6 +197,7 @@ minStorageCapacity(blankLines) = [];
 likelyStorageCapacity(blankLines) = [];
 maxStorageCapacity(blankLines) = [];
 
+
 % -------- Find Storage Volume By State ------------ %
 
 % TODO:
@@ -204,17 +205,11 @@ maxStorageCapacity(blankLines) = [];
 %   2) Get total lbs of storage for each state
 
 %calculations
-%m = D.*v
-mass = Densities.*likelyStorageCapacity.*6.28981; % [kg] mult. density by MMbbl converted to m^3
-AVGlbs = mass.*2.20462; % [lbs] converting kg to lbs 
+AVGlbs = ConversionFunction(likelyStorageCapacity,Densities); % [lbs] converting kg to lbs 
 
-%m = D.*v
-mass = Densities.*minStorageCapacity.*6.28981; % [kg] mult. density by MMbbl converted to m^3
-MINlbs = mass.*2.20462; % [lbs] converting kg to lbs 
+MINlbs = ConversionFunction(minStorageCapacity,Densities);
 
-%m = D.*v
-mass = Densities.*maxStorageCapacity.*6.28981; % [kg] mult. density by MMbbl converted to m^3
-MAXlbs = mass.*2.20462; % [lbs] converting kg to lbs 
+MAXlbs = ConversionFunction(maxStorageCapacity,Densities); % [lbs] converting kg to lbs 
 
 [rowx,coly] = size(stateWithStorage);
 
@@ -271,18 +266,23 @@ storeLats = [];
 storeLngs = [];
 
 for i = 1:length(shortStatesNames)
-   locInStatesVar = find( strcmpi(states, shortStatesAbbr));
-   storeLats = [storeLats, lat(locInStatesVar)];
-   storeLngs = [storeLngs, lng(locInStatesVar)];
+   locInStatesVar = find( strcmpi(states, shortStatesAbbr(i)));
+   storeLats = [storeLats; lat(locInStatesVar)];
+   storeLngs = [storeLngs; lng(locInStatesVar)];
 end
 
 
 % Setup for the map
-data = {storeLats, storeLngs, AVGstateStorage};
-labels = ["LbsStorage"];
-titles = ["Lbs Storage For Each State", "Storage [lbs CO2]"];
+stateStorage = [MINstateStorage', AVGstateStorage', MAXstateStorage'];      
+choice = menu("View Storage By State",["Minimum Projection","Likely Projection","Maximum Projection","Next Step"]);
 
-CreateMap(data,labels,titles,[4,25]);
+while(choice ~= 0 && choice ~= 4)
+    data = {storeLats, storeLngs, stateStorage(:,choice)};
+    labels = ["LbsStorage"];
+    titles = ["Lbs Storage For Each State", "Storage [lbs CO2]"];
+    CreateMap(data,labels,titles,[4,25]);
+    choice = menu("View Storage By State",["Minimum Projection","Likely Projection","Maximum Projection","Next Step"]);
+end
 
 % ------------ Map lbs storage by state ------------- %
 
