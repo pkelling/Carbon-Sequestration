@@ -243,7 +243,7 @@ for k = 1:length(help)
     end
     MINstateStorage = [MINstateStorage,(me1)];
     AVGstateStorage = [AVGstateStorage,(me2)];
-    MAXstateStorage = [MAXstateStorage,(me3)];                                         %creating vector of storage for states
+    MAXstateStorage = [MAXstateStorage,(me3)];                         %creating vector of storage for states
     me1 = 0;
     me2 = 0;
     me3 = 0; %reseting in order to calc. total of next state
@@ -254,9 +254,15 @@ mapAVG = containers.Map(help,AVGstateStorage); %assigning states with their resp
 mapMAX = containers.Map(help,MAXstateStorage); %assigning states with their respective total storage capacity
 
 
-
-
 % ------------ Map lbs storage by state ------------- %
+
+
+data = {lat, lng, totalEmissions, largestSources};
+labels = ["CO2Emissions", "MajorSource"];
+titles = ["CO2 Emissions For Each State", "Emissions [lb CO2]", "Largest Energy Source"];
+
+CreateMap(data,labels,titles,[3,20]);
+
 
 
 
