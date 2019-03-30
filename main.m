@@ -5,7 +5,7 @@ clc;
 
 % ----------- Load Emissions Data --------------%
 %          And Extract Useful Information
-
+%
 % Important Variables
 %   Strings:
 %       1) states = abbreviated state names
@@ -29,6 +29,12 @@ states = string(labels(5:55,1));
 
 % Load energy output by source [MWh]
 [stateResourceMix, labels] = xlsread("egrid2016_summarytables.xlsx",5);
+
+
+%list of renewable, nonrenewable, and unknown resources
+nonrenewableSources = sum(stateResourceMix(1:51, 3:6));
+renewableSources = sum(stateResourceMix(1:51, 7:12));
+unknownSources = stateResourceMix(1:51, 13);
 
 % List of power Sources
 powerSources = labels(3,4:14);
@@ -141,12 +147,13 @@ choice = menu("Compare state power sources?","yes","no");
 
 if choice == 1
     stateNum = listdlg('PromptString',"Please select state(s)", 'ListString',states);
-
+    
     if(~isempty(stateNum))
-        barh(categorical(states(stateNum)),sourcePercent(stateNum,:),'stacked');
+        
+        barh(categorical(states(stateNum)),energyBySource(stateNum,:),'stacked');
         legend(powerSources);
         title("Emissions sources by state");
-        xlabel("Percentage of Power Generation");
+        xlabel("Enegery Generated per Resource [MWh]");
         ylabel("State");
     else
         warning("No state selected, moving to next step.");
@@ -242,7 +249,7 @@ for k = 1:length(help)
     end
     MINstateStorage = [MINstateStorage,(me1)];
     AVGstateStorage = [AVGstateStorage,(me2)];
-    MAXstateStorage = [MAXstateStorage,(me3)];                                         %creating vector of storage for states
+    MAXstateStorage = [MAXstateStorage,(me3)];                         %creating vector of storage for states
     me1 = 0;
     me2 = 0;
     me3 = 0; %reseting in order to calc. total of next state
@@ -277,22 +284,67 @@ titles = ["Lbs Storage For Each State", "Storage [lbs CO2]"];
 
 CreateMap(data,labels,titles,[4,25]);
 
-
-
 % ------------ Map lbs storage by state ------------- %
+
+
 
 
 
 % ----------- Calculate storage over years ------------ %
 %   -Using 100% storage rate plot storage over time to see when storage
 %   fills up
+%   -Then, ask user to input % of emissions stored per year 
+%   OR
+%   -Ask user to enter increase in emissions stored per year (% increase)
+%   plot storage and emissions over time
 
 
-% -------- Calculate emissions with user defined change ------- %
+
+% ----------- Add in a rate of change in emissions -----------%
+%
+Growth_rate= input('Enter a percent change of CO2 emission per year between (-5)-5%:  ');
 
 
-% ----------- Add in a rate of storage -----------%
 
+
+while  Growth_rate < -5 || Growth_rate > 5 
+    warning(sprintf('You entered %0.2f, Please consider entering a value between (-5)-5%',Growth_rate));
+    Growth_rate= input('Enter a percent change of CO2 emission per year between (-5)-5%:   ');
+end 
+
+N_Years= input('Enter the number of years for the projection:');
+
+while N_Years <= 0
+    warning(sprintf('You entered %0.0f, Please consider entering a value greater than zero',N_Years));
+    N_Years= input('Enter the number of years for the projection:');
+end 
+
+Growth_rate= Growth_rate/100+1;
+N_Years= 1:N_Years;
+
+S=[];
+S_Y=[];
+SUM_EMISSION= sum(totalEmissions );
+for i= 1:length(N_Years)
+
+Proj= Growth_rate * SUM_EMISSION* N_Years(i);
+
+S=[S;Proj];
+
+end 
+
+Total_EMISSION=ones(length(N_Years))* SUM_EMISSION;
+plot(N_Years,Total_EMISSION,'--r','LineWidth',2)
+
+hold on 
+
+plot(N_Years,S,'g','LineWidth',2)
+grid on
+%   Ask user to input an emissions rate of change per year
+%   -using that, and previous value of % emissions stored (or % increase
+%   stored), plot storage and emissions over time to get a final idea of
+%   how effective carbon sequestration will be at dealing with the
+%   emissions problem.
 
 
 
