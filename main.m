@@ -81,7 +81,7 @@ CreateMap(data,labels,titles,[4,25]);
 % ---------- Map Visualization of particular power source --------- %
 
 % TODO:
-%   1) Change sizes of bubbles so scale is same for every power source.
+%   1) Make another section for renewable
 
 source = menu("View a particular power source?", ['Move to Next Step',powerSources]);
 
@@ -152,10 +152,6 @@ if choice == 1
         warning("No state selected, moving to next step.");
     end
 end
-
-
-
-
 
 
 
@@ -256,6 +252,9 @@ end
 mapMIN = containers.Map(help,MINstateStorage); %assigning states with their respective total storage capacity
 mapAVG = containers.Map(help,AVGstateStorage); %assigning states with their respective total storage capacity
 mapMAX = containers.Map(help,MAXstateStorage); %assigning states with their respective total storage capacity
+
+
+
 
 % ------------ Map lbs storage by state ------------- %
 
