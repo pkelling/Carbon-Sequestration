@@ -171,6 +171,9 @@ end
 
 stateWithStorage = string(labels(9:280,93:2:107));
 percentInState = numbers(1:272,92:2:106);
+minStorageCapacity = numbers(1:272,1);
+likelyStorageCapacity = numbers(1:272,2);
+maxStorageCapacity = numbers(1:272,3);
 
 Volumes = numbers(1:272,14);
 Densities = numbers(1:272,22);
@@ -183,14 +186,77 @@ Volumes(blankLines) = [];
 Densities(blankLines) = [];
 stateWithStorage(blankLines,:) = [];
 percentInState(blankLines,:) = [];
-
-
+minStorageCapacity(blankLines) = [];
+likelyStorageCapacity(blankLines) = [];
+maxStorageCapacity(blankLines) = [];
 
 % -------- Convert to lbs storage by state ------------ %
 % TODO:
 %   1) Convert Storage to lbs CO2 for each site
 %   2) Get total lbs of storage for each state
 
+%calculations
+bbl = likelyStorageCapacity.*7758.37; % [bbl] converting acres sq.ft. to bbl (barrels of oil) 
+MMbbl = bbl./1000000; %[MMbbl] converting bbl to MMbbl
+%m = D.*v
+mass = Densities.*MMbbl.*6.28981; % [kg] mult. density by MMbbl converted to m^3
+AVGlbs = mass.*2.20462; % [lbs] converting kg to lbs 
+
+bbl = minStorageCapacity.*7758.37; % [bbl] converting acres sq.ft. to bbl (barrels of oil) 
+MMbbl = bbl./1000000; %[MMbbl] converting bbl to MMbbl
+%m = D.*v
+mass = Densities.*MMbbl.*6.28981; % [kg] mult. density by MMbbl converted to m^3
+MINlbs = mass.*2.20462; % [lbs] converting kg to lbs 
+
+bbl = maxStorageCapacity.*7758.37; % [bbl] converting acres sq.ft. to bbl (barrels of oil) 
+MMbbl = bbl./1000000; %[MMbbl] converting bbl to MMbbl
+%m = D.*v
+mass = Densities.*MMbbl.*6.28981; % [kg] mult. density by MMbbl converted to m^3
+MAXlbs = mass.*2.20462; % [lbs] converting kg to lbs 
+
+
+[rowx,coly] = size(stateWithStorage);
+
+%Correcting mispelled state names
+for i = 1:rowx
+    for j = 1:coly
+        if stateWithStorage(i,j) == 'Utah '
+            stateWithStorage(i,j) = 'Utah';
+        end
+        if stateWithStorage(i,j) == 'Pensylvania'
+            stateWithStorage(i,j) = 'Pennsylvania';
+        end
+    end
+end
+
+help = unique(stateWithStorage); %assembling vector with all unique state names
+help(cellfun('isempty',help)) = [];
+percentInState(isnan(percentInState)) = 0; %changing NaN elements into 0 in order to perform operations
+
+me1 = 0;
+me2 = 0;
+me3 = 0;
+MINstateStorage = [];
+AVGstateStorage = [];
+MAXstateStorage = [];
+for k = 1:length(help)
+    [ex,why] = find(stateWithStorage == help(k)); %using find function to find [row,col] in order to index
+    for p = 1:length(ex)
+        me1 = me1 +(MINlbs(ex(p),1).*(percentInState(ex(p),(why(p))))/100); %getting total storage for state(k)
+        me2 = me2 +(AVGlbs(ex(p),1).*(percentInState(ex(p),(why(p))))/100); %getting total storage for state(k)
+        me3 = me3 +(MAXlbs(ex(p),1).*(percentInState(ex(p),(why(p))))/100); %getting total storage for state(k)
+    end
+    MINstateStorage = [MINstateStorage,(me1)];
+    AVGstateStorage = [AVGstateStorage,(me2)];
+    MAXstateStorage = [MAXstateStorage,(me3)];                                         %creating vector of storage for states
+    me1 = 0;
+    me2 = 0;
+    me3 = 0; %reseting in order to calc. total of next state
+end
+ 
+mapMIN = containers.Map(help,MINstateStorage); %assigning states with their respective total storage capacity
+mapAVG = containers.Map(help,AVGstateStorage); %assigning states with their respective total storage capacity
+mapMAX = containers.Map(help,MAXstateStorage); %assigning states with their respective total storage capacity
 
 
 
