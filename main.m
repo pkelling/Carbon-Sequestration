@@ -30,6 +30,11 @@ states = string(labels(5:55,1));
 %Load energy output by source [MWh]
 [stateResourceMix, labels] = xlsread("egrid2016_summarytables.xlsx",5);
 
+%list of renewable, nonrenewable, and unknown resources
+nonrenewableSources = sum(stateResourceMix(1:51, 3:6));
+renewableSources = sum(stateResourceMix(1:51, 7:12));
+unknownSources = stateResourceMix(1:51, 13);
+
 %list of power Sources
 powerSources = labels(3,4:14);
 
@@ -146,12 +151,13 @@ choice = menu("Compare state power sources?","yes","no");
 
 if choice == 1
     stateNum = listdlg('PromptString',"Please select state(s)", 'ListString',states);
-
+    
     if(~isempty(stateNum))
-        barh(categorical(states(stateNum)),sourcePercent(stateNum,:),'stacked');
+        
+        barh(categorical(states(stateNum)),energyBySource(stateNum,:),'stacked');
         legend(powerSources);
         title("Emissions sources by state");
-        xlabel("Percentage of Power Generation");
+        xlabel("Enegery Generated per Resource [MWh]");
         ylabel("State");
     else
         warning("No state selected, moving to next step.");
