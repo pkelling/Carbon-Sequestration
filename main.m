@@ -305,16 +305,9 @@ fprintf('%0.0f years will be required to completely fill the storage for max sto
 
 
 
-% ----------- Add in a rate of change in emissions -----------%
-%
-Growth_rate= input('Enter a percent change of CO2 emission per year between -5% - 5%:  ');
-
-
-
-
 % ----------- Projections for CO2 Emissions and Storage -----------%
 
-Growth_rate= input('Enter a percent change of CO2 emission per year between (-5)-5%: ');
+Growth_rate= input('Enter a percent change of CO2 emission per year between -5% - 5%:  ');
 
 while  Growth_rate < -5 || Growth_rate > 5 
     warning(sprintf('You entered %0.2f, Please consider entering a value between -5% - 5%',Growth_rate));
@@ -335,11 +328,8 @@ S=[];
 S_Y=[];
 SUM_EMISSION= sum(totalEmissions );
 for i= 1:length(N_Years)
-
-Proj= Growth_rate * SUM_EMISSION* N_Years(i);
-
-S=[S;Proj];
-
+    Proj= Growth_rate * SUM_EMISSION* N_Years(i);
+    S=[S;Proj];
 end 
 
 Total_EMISSION=ones(length(N_Years))* SUM_EMISSION;
@@ -350,11 +340,8 @@ hold on
 
 plot(N_Years,S,'g','LineWidth',2)
 grid on
-%   Ask user to input an emissions rate of change per year
-%   -using that, and previous value of % emissions stored (or % increase
-%   stored), plot storage and emissions over time to get a final idea of
-%   how effective carbon sequestration will be at dealing with the
-%   emissions problem.
+
+
 Total_EMISSION = ones(length(N_Years))* SUM_EMISSION;
 fig1 = plot(N_Years,Total_EMISSION,'--r','LineWidth',2);
 
@@ -366,12 +353,6 @@ title('Projection Versus Current CO2 Emission By Year');
 xlabel('Year');
 ylabel('Emission [Lbs/MWH]');
 hold off
-%   Ask user to input an emissions rate of change per year
-%   -using that, and previous value of % emissions stored (or % increase
-%   stored), plot storage and emissions over time to get a final idea of
-%   how effective carbon sequestration will be at dealing with the
-%   emissions problem.
-
 
 
 % ---------------------------------Part 3 - 2 Projection------------------------------------------ %
