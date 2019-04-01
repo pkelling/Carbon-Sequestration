@@ -271,7 +271,7 @@ end
 
 % Setup for the map
 stateStorage = [MINstateStorage', AVGstateStorage', MAXstateStorage'];      
-choice = menu("View Storage By State",["Minimum Projection","Likely Projection","Maximum Projection","Next Step"]);
+choice = menu("View CO2 Storage By State",["Minimum Estimated","Likely Estimated","Maximum Estimated","Next Step"]);
 
 while(choice ~= 0 && choice ~= 4)
     data = {storeLats, storeLngs, stateStorage(:,choice)};
@@ -298,26 +298,26 @@ Time_Years_likely = Storage_US_likely / emission_US;
 Time_Years_min = Storage_US_min / emission_US;
 Time_Years_max = Storage_US_max / emission_US;
 
-fprintf('%0.0f years will be required to completely fill the storage for min storage capacity.\n' , Time_Years_min);
+fprintf('%0.0f years will be required to completely fill the storage for min estimated storage capacity.\n' , Time_Years_min);
 fprintf('%0.0f years will be required to completely fill the storage for likely storage capacity.\n' , Time_Years_likely);
-fprintf('%0.0f years will be required to completely fill the storage for max storage capacity.\n\n' , Time_Years_max);
+fprintf('%0.0f years will be required to completely fill the storage for max estimated storage capacity.\n\n' , Time_Years_max);
 
 
 
 
-% ----------- Projections for CO2 Emissions and Storage -----------%
+% ----------- Projections for CO2 Emissions -----------%
 
 Growth_rate= input('Enter a percent change of CO2 emission per year between -5% - 5%:  ');
 
 while  Growth_rate < -5 || Growth_rate > 5 
-    warning(sprintf('You entered %0.2f, Please consider entering a value between -5% - 5%',Growth_rate));
+    warning(sprintf('You entered %0.2f, Please enter a value between -5% - 5%',Growth_rate));
     Growth_rate= input('Enter a percent change of CO2 emission per year between -5% - 5%: ');
 end 
 
 N_Years= input('Enter the number of years for the projection: ');
 
 while N_Years <= 0
-    warning(sprintf('You entered %0.0f, Please consider entering a value greater than zero',N_Years));
+    warning(sprintf('You entered %0.0f, Please enter a value greater than zero',N_Years));
     N_Years= input('Enter the number of years for the projection: ');
 end 
 
@@ -326,104 +326,115 @@ N_Years= 1:N_Years;
 
 S=[];
 S_Y=[];
-SUM_EMISSION= sum(totalEmissions );
-for i= 1:length(N_Years)
-    Proj= Growth_rate * SUM_EMISSION* N_Years(i);
-    S=[S;Proj];
-end 
-
-Total_EMISSION=ones(length(N_Years))* SUM_EMISSION;
-subplot(2,1,1);
-plot(N_Years,Total_EMISSION,'--r','LineWidth',2)
-
-hold on 
-
-plot(N_Years,S,'g','LineWidth',2)
-grid on
+S(1) = sum(totalEmissions);
+for i= 2:length(N_Years)
+    Proj= Growth_rate * S(i-1);
+    S= [S;Proj];
+end
 
 
-Total_EMISSION = ones(length(N_Years))* SUM_EMISSION;
-fig1 = plot(N_Years,Total_EMISSION,'--r','LineWidth',2);
 
-hold on 
+% --------------------------- Projections for CO2 Emissions and Storage --------------------------%
 
-plot(N_Years,S,'g','LineWidth',2)
-grid on
-title('Projection Versus Current CO2 Emission By Year');
-xlabel('Year');
-ylabel('Emission [Lbs/MWH]');
-hold off
-
-
-% ---------------------------------Part 3 - 2 Projection------------------------------------------ %
+openPlot = 1;
 again = 1;
 while again ==1
-        inputUser = {'Enter expected CO2 capture per year [0% - 10%]: '};
-        dlgtitle = 'Info';
-        dmsion = [1 75];
-        defaultInput = {''};
+        inputUser = {'Enter starting CO2 capture per year as percent of emissions [0% < num < 5%]: ',...
+                    'Enter factor to represent increase in use of carbon capture technologies [number >= 1]: '};
+        dlgtitle = 'Carbon Capture Inputs';
+        dmsion = [1 110];
+        defaultInput = {'',''};
         
         % Output vector of user input
         outputBox = inputdlg(inputUser,dlgtitle,dmsion,defaultInput);
+        
         % Convert cell value to double
-        output_Box_value = str2double(outputBox)/100;
+        output_Box_value = str2double(outputBox);
              
         % msg of data validation
-        reinputUser = {'Re-enter expected CO2 capture per year[0% - 50%]: '};
+        reinputUser = {'Re-enter starting CO2 capture percent [ 0% < num < 5%]: ',...
+                    'Re-enter factor for increase in use of carbon capture [number >= 1]: '};
  
         % Data validation - While Loop
-                    while output_Box_value(1) < 0 || output_Box_value(1) > 0.5
-                        % Output vector of user input
-                        outputBox = inputdlg(inputUser,dlgtitle,dmsion,defaultInput);
-                        % Convert cell value to double
-                        output_Box_value = (str2double(outputBox))./100;
+        while isempty(output_Box_value) || output_Box_value(1) <= 0 || output_Box_value(1) > 5 || output_Box_value(2) < 1
+            % Output vector of user input
+            outputBox = inputdlg(inputUser,dlgtitle,dmsion,defaultInput);
+            % Convert cell value to double
+            output_Box_value = str2double(outputBox);
+        end
+        
 
-                    end    
-        captureRate_CO2 = output_Box_value;  
-        num_Year = length(N_Years);
-        % Max current Storage Capacity 
-        total_Storage_Cap = sum(MAXstateStorage);
-        % Initialize
+        multFactor = output_Box_value(2);
+        captureRate_CO2 = output_Box_value(1)/100;
+        
+        num_Year = length(N_Years); 
+        startingCapture = captureRate_CO2 * S(1);
+        total_Storage_Cap = Storage_US_likely;
         Total_Projected_Capture_CO2 = 0;
         
-        for u = 1:1:num_Year       
-                % Calculate amount of CO2 stored with provided percentage
-                Projected_Capture_StorageCO2(u) = S(u) .* captureRate_CO2;
-                    if u ==1
-                    Total_Projected_Capture_CO2(u) = Projected_Capture_StorageCO2(u);
-                    elseif u > 1
-                    Total_Projected_Capture_CO2(u) = Total_Projected_Capture_CO2(u-1) + Projected_Capture_StorageCO2(u);
-    %                 remain_Cap_CO2(u-1) = totalMAX - Total_Projected_Capture_CO2(u-1);  
-                    end
-        end    
+        Projected_Capture_StorageCO2(1) = startingCapture;
+        Total_Captured_CO2 = startingCapture;
+        emissions_Not_Captured(1) = S(1) - startingCapture;
+        
+        for u = 2:num_Year       
+                % Calculate amount of CO2 stored for each year
+                co2Stored = Projected_Capture_StorageCO2(u-1) * multFactor;
+
+                if(co2Stored > S(u))
+                    % 100% of emissions captured
+                    co2Stored = S(u);
+                end
+                
+                if(Total_Captured_CO2 + co2Stored > total_Storage_Cap)
+                    % Ran out of Storage
+                    co2Stored = total_Storage_Cap - Total_Captured_CO2;
+                end
+                    
+                Projected_Capture_StorageCO2(u) = co2Stored;
+                emissions_Not_Captured(u) = S(u) - co2Stored;
+                Total_Captured_CO2 = Total_Captured_CO2 + co2Stored;
+        end
+        
+        
        % Get data for pie chart
-        percent_Storage = Total_Projected_Capture_CO2(end)./(sum(MAXstateStorage)) ;
+        percent_Storage = Total_Captured_CO2 / total_Storage_Cap;
+        if( percent_Storage >= 1)
+            percent_Storage = .99999;
+        end
         pie_data = [percent_Storage, (1-percent_Storage)];
+
+        
+        % bring new figure to front
+        if( openPlot == 1)
+            figh = figure(2);
+            pos = get(figh,'position');
+            set(figh,'position',[pos(1:2)/2 pos(3:4)*1.5])
+            openPlot = 0;
+        end
         
         % Plot the graph
         subplot(2,1,1)
-        x_Axis = 1:1:num_Year;
-        y_Axis = [Total_Projected_Capture_CO2(1:num_Year)', S(1:num_Year)];
+        x_Axis = 1:num_Year;
+        y_Axis = [Projected_Capture_StorageCO2(1:num_Year)', emissions_Not_Captured(1:num_Year)'];
         fig2 = bar(x_Axis, y_Axis, 'stacked');
-        
-        hold on
+
         xlim auto;          ylim auto
         xlabel('Year');     ylabel('Emission [Lbs/MWH]');
         title('Total Projection CO2 Capture & Emission By Year');
+        legend(fig2,{'Captured CO2','Uncaptured CO2'},'Location', 'Best');
+        %grid on
         
-        legend(fig2,{'Total Capture CO2','Emission CO2'},'Location', 'Best');
-        grid on
-        hold off
         
-         subplot(2,1,2)
-         labels = {'CO2 Capture','Remain CO2 Storage Capacity'}; 
-         pie(pie_data);
-         tlt = sprintf('Total CO2 Emission Capture Versus Storage Capacity');
-         title(tlt);
+        % Plot Pie Chart
+        subplot(2,1,2)
+        labels = {'CO2 Captured','Remaining Storage'};
+        pie(pie_data,labels);
+        tlt = sprintf('Total CO2 Emission Captured Versus Storage Capacity');
+        title(tlt);
 
 
 % Repeat request
-rep = menu('Do you want to repeat?', 'Yes', 'No');
+rep = menu('Do you want to repeat projection?', 'Yes', 'No');
 if rep == 1
 elseif rep == 2 || rep == 0
 again =2;
