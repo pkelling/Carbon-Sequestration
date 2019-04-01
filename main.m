@@ -30,14 +30,9 @@ states = string(labels(5:55,1));
 % Load energy output by source [MWh]
 [stateResourceMix, labels] = xlsread("egrid2016_summarytables.xlsx",5);
 
-
-%list of renewable, nonrenewable, and unknown resources
-nonrenewableSources = sum(stateResourceMix(1:51, 3:6));
-renewableSources = sum(stateResourceMix(1:51, 7:12));
-unknownSources = stateResourceMix(1:51, 13);
-
 % List of power Sources
 powerSources = labels(3,4:14);
+renewSources = ["Renewable", "Nonrenewable", "Other Unknown/Purchased Fuel"];
 
 % Power sources percentages
 sourcePercent = stateResourceMix(1:51,3:end);
@@ -51,6 +46,11 @@ energyBySource = energyTotals .* sourcePercent;
 %Emissions totals for each state
 totalEmissions = energyTotals .* emissionsFactors;
 
+%list of renewable, nonrenewable, and unknown resources
+renewableSources = energyTotals .* sum((stateResourceMix(1:51, 7:12)),2);
+nonrenewableSources = energyTotals .* sum((stateResourceMix(1:51, 3:6)),2);
+unknownSources = energyTotals .* stateResourceMix(1:51, 13);
+groupSources = [renewableSources, nonrenewableSources, unknownSources];
 
 
 
@@ -86,9 +86,6 @@ CreateMap(data,labels,titles,[4,25]);
 
 % ---------- Map Visualization of particular power source --------- %
 
-% TODO:
-%   1) Make another section for renewable
-
 source = menu("View a particular power source?", ['Move to Next Step',powerSources]);
 
 % Validate selection
@@ -97,7 +94,7 @@ if(source == 0)
 end
 
 
-while(source > 0)
+while(source > 1)
     source = source - 1;
     
     % Construct unique titles for current source
@@ -134,32 +131,34 @@ end
 
 % ---------- States Side by Side comparison ------------- %
 
-% TODO:
-%   1) Validate User Input
-%   2) Change to loop so you can select different states.
-%   3) Make chart based on actual energy output, not percent of output
-%       -This will help give a better idea of energy output differences
-%       between states
-%   4) Change colors so they match resource (coal->black, hydro->blue...)
-
-
-choice = menu("Compare state power sources?","yes","no");
-
-if choice == 1
-    stateNum = listdlg('PromptString',"Please select state(s)", 'ListString',states);
-    
-    if(~isempty(stateNum))
+choice = menu("Compare states energy sources?","Yes","No");
+while choice == 1
+    stateNum = listdlg('PromptString',"Please select states", 'ListString',states);
         
+    while length(stateNum) == 1
+        warning("Cannot compare a single state by itself. Please select more states");
+        stateNum = listdlg('PromptString',"Please select state(s)", 'ListString',states);
+    end
+
+    renew = menu("Compare renewables and nonrenewables or all sources?", 'Renewables/Nonrenewables', 'All Sources');    
+    if(~isempty(stateNum)) && renew == 1
+        barh(categorical(states(stateNum)),groupSources(stateNum,:),'stacked');
+        legend(renewSources);
+        title("Energy Generation by Sources Per State");
+        xlabel("Energy Generated per Resource [MWh]");
+        ylabel("State");
+    elseif(~isempty(stateNum)) && renew == 2
         barh(categorical(states(stateNum)),energyBySource(stateNum,:),'stacked');
         legend(powerSources);
-        title("Emissions sources by state");
-        xlabel("Enegery Generated per Resource [MWh]");
+        title("Energy Generation by Sources Per State");
+        xlabel("Energy Generated per Resource [MWh]");
         ylabel("State");
     else
         warning("No state selected, moving to next step.");
     end
+    
+    choice = menu("Compare different states energy sources?","Yes","No");
 end
-
 
 
 
@@ -185,8 +184,13 @@ maxStorageCapacity = numbers(1:272,15);
 Volumes = numbers(1:272,14);
 Densities = numbers(1:272,22);
 
-% -- Validate Data 
+volumesMin = numbers(1:272,13);
+volumesMax = numbers(1:272,15);
+densitiesMin = numbers(1:272,21);
+densitiesMax = numbers(1:272,23);
 
+
+% -- Validate Data 
 % Remove lines where Volume is Nan (they were blank lines)
 blankLines = find(isnan(Volumes));
 Volumes(blankLines) = [];
@@ -197,18 +201,19 @@ minStorageCapacity(blankLines) = [];
 likelyStorageCapacity(blankLines) = [];
 maxStorageCapacity(blankLines) = [];
 
+volumesMin(blankLines) = [];
+volumesMax(blankLines) = [];
+densitiesMin(blankLines) = [];
+densitiesMax(blankLines) = [];
+
 
 % -------- Find Storage Volume By State ------------ %
 
-% TODO:
-%   1) Convert Storage to lbs CO2 for each site
-%   2) Get total lbs of storage for each state
 
-%calculations
+%calculations (Note, this doesn't consider the density variations
+%   which are small but not completely insignificant);
 AVGlbs = ConversionFunction(likelyStorageCapacity,Densities); % [lbs] converting kg to lbs 
-
 MINlbs = ConversionFunction(minStorageCapacity,Densities);
-
 MAXlbs = ConversionFunction(maxStorageCapacity,Densities); % [lbs] converting kg to lbs 
 
 [rowx,coly] = size(stateWithStorage);
@@ -244,21 +249,14 @@ for k = 1:length(help)
     end
     MINstateStorage = [MINstateStorage,(me1)];
     AVGstateStorage = [AVGstateStorage,(me2)];
-    MAXstateStorage = [MAXstateStorage,(me3)];                         %creating vector of storage for states
+    MAXstateStorage = [MAXstateStorage,(me3)];      %creating vector of storage for states
     me1 = 0;
     me2 = 0;
     me3 = 0; %reseting in order to calc. total of next state
 end
- 
-mapMIN = containers.Map(help,MINstateStorage); %assigning states with their respective total storage capacity
-mapAVG = containers.Map(help,AVGstateStorage); %assigning states with their respective total storage capacity
-mapMAX = containers.Map(help,MAXstateStorage); %assigning states with their respective total storage capacity
 
-% %12-2 office hours
 
 % ------------ Map lbs storage by state ------------- %
-%           Along with lbs emissions ????
-%   Possible: select between 3 maps: min, M likely, and max storage?
 
 shortStatesAbbr = ["AL";"AK";"AR";"CA";"CO";"FL";"GA";"ID";"IL";"IN";"KS";"KY";"LA";"MD";"MI";"MS";"MO";"MT";"NE";"NJ";"NM";"NY";"NC";"ND";"OH";"OK";"OR";"PA";"SC";"SD";"TX";"UT";"VA";"WA";"WV";"WY"];
 shortStatesNames = help;
@@ -270,7 +268,6 @@ for i = 1:length(shortStatesNames)
    storeLats = [storeLats; lat(locInStatesVar)];
    storeLngs = [storeLngs; lng(locInStatesVar)];
 end
-
 
 % Setup for the map
 stateStorage = [MINstateStorage', AVGstateStorage', MAXstateStorage'];      
@@ -284,31 +281,27 @@ while(choice ~= 0 && choice ~= 4)
     choice = menu("View Storage By State",["Minimum Projection","Likely Projection","Maximum Projection","Next Step"]);
 end
 
-% ------------ Map lbs storage by state ------------- %
-
-
 
 
 %------------ find the number of year to store 100 % of U.S emission -------------- %
 
 % the total U.S emission per year [lb/year]
-emisssion_US = sum(totalEmissions);
+emission_US = sum(totalEmissions);
 
 % the total U.S storage [lb]
-% Storage_U.S = sum(ConversionFunction(Vol,Denst));
+Storage_US_likely = sum(ConversionFunction(Volumes,Densities));
+Storage_US_min = sum(ConversionFunction(volumesMin,densitiesMin));
+Storage_US_max = sum(ConversionFunction(volumesMax,densitiesMax));
 
 %Number of years required to store the U.S emission
-% Time_Years = Storage_US / emission_US;
+Time_Years_likely = Storage_US_likely / emission_US;
+Time_Years_min = Storage_US_min / emission_US;
+Time_Years_max = Storage_US_max / emission_US;
 
-% fprintf('%0.0f years will be required to completely fill the storage' , Time_Years);
+fprintf('%0.0f years will be required to completely fill the storage for min storage capacity.\n' , Time_Years_min);
+fprintf('%0.0f years will be required to completely fill the storage for likely storage capacity.\n' , Time_Years_likely);
+fprintf('%0.0f years will be required to completely fill the storage for max storage capacity.\n\n' , Time_Years_max);
 
-% ----------- Calculate storage over years ------------ %
-%   -Using 100% storage rate plot storage over time to see when storage
-%   fills up
-%   -Then, ask user to input % of emissions stored per year 
-%   OR
-%   -Ask user to enter increase in emissions stored per year (% increase)
-%   plot storage and emissions over time
 
 
 
@@ -319,9 +312,13 @@ Growth_rate= input('Enter a percent change of CO2 emission per year between -5% 
 
 
 
+% ----------- Projections for CO2 Emissions and Storage -----------%
+
+Growth_rate= input('Enter a percent change of CO2 emission per year between (-5)-5%: ');
+
 while  Growth_rate < -5 || Growth_rate > 5 
     warning(sprintf('You entered %0.2f, Please consider entering a value between -5% - 5%',Growth_rate));
-    Growth_rate= input('Enter a percent change of CO2 emission per year between -5% - 5%:   ');
+    Growth_rate= input('Enter a percent change of CO2 emission per year between -5% - 5%: ');
 end 
 
 N_Years= input('Enter the number of years for the projection: ');
@@ -345,6 +342,14 @@ S=[S;Proj];
 
 end 
 
+Total_EMISSION=ones(length(N_Years))* SUM_EMISSION;
+subplot(2,1,1);
+plot(N_Years,Total_EMISSION,'--r','LineWidth',2)
+
+hold on 
+
+plot(N_Years,S,'g','LineWidth',2)
+grid on
 %   Ask user to input an emissions rate of change per year
 %   -using that, and previous value of % emissions stored (or % increase
 %   stored), plot storage and emissions over time to get a final idea of
@@ -366,6 +371,8 @@ hold off
 %   stored), plot storage and emissions over time to get a final idea of
 %   how effective carbon sequestration will be at dealing with the
 %   emissions problem.
+
+
 
 % ---------------------------------Part 3 - 2 Projection------------------------------------------ %
 again = 1;
