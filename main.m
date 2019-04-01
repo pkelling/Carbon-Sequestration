@@ -364,7 +364,7 @@ while again ==1
         end
         
 
-        multFactor = output_Box_value(2);
+        multFactor = output_Box_value(2)/100;
         captureRate_CO2 = output_Box_value(1)/100;
         
         num_Year = length(N_Years); 
