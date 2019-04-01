@@ -339,8 +339,8 @@ end
 openPlot = 1;
 again = 1;
 while again ==1
-        inputUser = {'Enter starting CO2 capture per year as percent of emissions [0% < num < 5%]: ',...
-                    'Enter factor to represent increase in use of carbon capture technologies [number >= 1]: '};
+        inputUser = {'Enter starting CO2 capture per year as percent of emissions [0% < num < 2%]: ',...
+                    'Enter factor to represent increase in use of carbon capture technologies [0% < number < 1.5%]: '};
         dlgtitle = 'Carbon Capture Inputs';
         dmsion = [1 110];
         defaultInput = {'',''};
@@ -352,11 +352,11 @@ while again ==1
         output_Box_value = str2double(outputBox);
              
         % msg of data validation
-        reinputUser = {'Re-enter starting CO2 capture percent [ 0% < num < 5%]: ',...
-                    'Re-enter factor for increase in use of carbon capture [number >= 1]: '};
+        reinputUser = {'Re-enter starting CO2 capture percent [ 0% < num <2%]: ',...
+                    'Re-enter factor for increase in use of carbon capture [0% < number < 1.5%]: '};
  
         % Data validation - While Loop
-        while isempty(output_Box_value) || output_Box_value(1) <= 0 || output_Box_value(1) > 5 || output_Box_value(2) < 1
+        while isempty(output_Box_value) || output_Box_value(1) <= 0 || output_Box_value(1) > 2 || output_Box_value(2) <= 0 || output_Box_value(2) >= 1.5
             % Output vector of user input
             outputBox = inputdlg(inputUser,dlgtitle,dmsion,defaultInput);
             % Convert cell value to double
