@@ -30,7 +30,6 @@ states = string(labels(5:55,1));
 % Load energy output by source [MWh]
 [stateResourceMix, labels] = xlsread("egrid2016_summarytables.xlsx",5);
 
-
 %list of renewable, nonrenewable, and unknown resources
 nonrenewableSources = sum(stateResourceMix(1:51, 3:6));
 renewableSources = sum(stateResourceMix(1:51, 7:12));
@@ -38,6 +37,7 @@ unknownSources = stateResourceMix(1:51, 13);
 
 % List of power Sources
 powerSources = labels(3,4:14);
+renewSources = ["Renewable", "Nonrenewable", "Other Unknown/Purchased Fuel"];
 
 % Power sources percentages
 sourcePercent = stateResourceMix(1:51,3:end);
@@ -51,6 +51,11 @@ energyBySource = energyTotals .* sourcePercent;
 %Emissions totals for each state
 totalEmissions = energyTotals .* emissionsFactors;
 
+%list of renewable, nonrenewable, and unknown resources
+renewableSources = energyTotals .* sum((stateResourceMix(1:51, 7:12)),2);
+nonrenewableSources = energyTotals .* sum((stateResourceMix(1:51, 3:6)),2);
+unknownSources = energyTotals .* stateResourceMix(1:51, 13);
+groupSources = [renewableSources, nonrenewableSources, unknownSources];
 
 
 
@@ -65,7 +70,6 @@ lng = latlng(:,2);
 figh = figure(1);
 pos = get(figh,'position');
 set(figh,'position',[pos(1:2)/2 pos(3:4)*1.5])
-
 
 
 
@@ -97,7 +101,7 @@ if(source == 0)
 end
 
 
-while(source > 0)
+while(source > 1)
     source = source - 1;
     
     % Construct unique titles for current source
@@ -143,21 +147,31 @@ end
 %   4) Change colors so they match resource (coal->black, hydro->blue...)
 
 
-choice = menu("Compare state power sources?","yes","no");
-
+choice = menu("Compare state energy sources?","Yes","No");
 if choice == 1
     stateNum = listdlg('PromptString',"Please select state(s)", 'ListString',states);
-    
-    if(~isempty(stateNum))
+       renew = menu("Would you like to compare renewable and nonrenewable sources", 'Yes', 'No');
         
-        barh(categorical(states(stateNum)),energyBySource(stateNum,:),'stacked');
-        legend(powerSources);
-        title("Emissions sources by state");
-        xlabel("Enegery Generated per Resource [MWh]");
-        ylabel("State");
-    else
-        warning("No state selected, moving to next step.");
-    end
+        while stateNum == 1
+            warning("Cannot compare a single state by itself. Please select more states");
+            stateNum = listdlg('PromptString',"Please select state(s)", 'ListString',states);
+        end
+            if(~isempty(stateNum)) && renew == 1
+                barh(categorical(states(stateNum)),groupSources(stateNum,:),'stacked');
+                legend(renewSources);
+                title("Energy Generation by Sources Per State");
+                xlabel("Energy Generated per Resource [MWh]");
+                ylabel("State");
+            elseif(~isempty(stateNum)) && renew == 2
+                barh(categorical(states(stateNum)),energyBySource(stateNum,:),'stacked');
+                legend(powerSources);
+                title("Energy Generation by Sources Per State");
+                xlabel("Energy Generated per Resource [MWh]");
+                ylabel("State");
+            else
+                warning("No state selected, moving to next step.");
+            end
+       
 end
 
 
@@ -185,8 +199,12 @@ maxStorageCapacity = numbers(1:272,15);
 Volumes = numbers(1:272,14);
 Densities = numbers(1:272,22);
 
-% -- Validate Data 
+volumesMin = numbers(1:272,13);
+volumesMax = numbers(1:272,15);
+densitiesMin = numbers(1:272,21);
+densitiesMax = numbers(1:272,23);
 
+% -- Validate Data 
 % Remove lines where Volume is Nan (they were blank lines)
 blankLines = find(isnan(Volumes));
 Volumes(blankLines) = [];
@@ -197,6 +215,11 @@ minStorageCapacity(blankLines) = [];
 likelyStorageCapacity(blankLines) = [];
 maxStorageCapacity(blankLines) = [];
 
+volumesMin(blankLines) = [];
+volumesMax(blankLines) = [];
+densitiesMin(blankLines) = [];
+densitiesMax(blankLines) = [];
+
 
 % -------- Find Storage Volume By State ------------ %
 
@@ -205,10 +228,8 @@ maxStorageCapacity(blankLines) = [];
 %   2) Get total lbs of storage for each state
 
 %calculations
-AVGlbs = ConversionFunction(likelyStorageCapacity,Densities); % [lbs] converting kg to lbs 
-
 MINlbs = ConversionFunction(minStorageCapacity,Densities);
-
+AVGlbs = ConversionFunction(likelyStorageCapacity,Densities); % [lbs] converting kg to lbs
 MAXlbs = ConversionFunction(maxStorageCapacity,Densities); % [lbs] converting kg to lbs 
 
 [rowx,coly] = size(stateWithStorage);
@@ -250,15 +271,8 @@ for k = 1:length(help)
     me3 = 0; %reseting in order to calc. total of next state
 end
  
-mapMIN = containers.Map(help,MINstateStorage); %assigning states with their respective total storage capacity
-mapAVG = containers.Map(help,AVGstateStorage); %assigning states with their respective total storage capacity
-mapMAX = containers.Map(help,MAXstateStorage); %assigning states with their respective total storage capacity
-
-% %12-2 office hours
 
 % ------------ Map lbs storage by state ------------- %
-%           Along with lbs emissions ????
-%   Possible: select between 3 maps: min, M likely, and max storage?
 
 shortStatesAbbr = ["AL";"AK";"AR";"CA";"CO";"FL";"GA";"ID";"IL";"IN";"KS";"KY";"LA";"MD";"MI";"MS";"MO";"MT";"NE";"NJ";"NM";"NY";"NC";"ND";"OH";"OK";"OR";"PA";"SC";"SD";"TX";"UT";"VA";"WA";"WV";"WY"];
 shortStatesNames = help;
@@ -270,7 +284,6 @@ for i = 1:length(shortStatesNames)
    storeLats = [storeLats; lat(locInStatesVar)];
    storeLngs = [storeLngs; lng(locInStatesVar)];
 end
-
 
 % Setup for the map
 stateStorage = [MINstateStorage', AVGstateStorage', MAXstateStorage'];      
@@ -284,31 +297,27 @@ while(choice ~= 0 && choice ~= 4)
     choice = menu("View Storage By State",["Minimum Projection","Likely Projection","Maximum Projection","Next Step"]);
 end
 
-% ------------ Map lbs storage by state ------------- %
-
-
 
 
 %------------ find the number of year to store 100 % of U.S emission -------------- %
 
 % the total U.S emission per year [lb/year]
-emisssion_US = sum(totalEmissions);
+emission_US = sum(totalEmissions);
 
 % the total U.S storage [lb]
-Storage_U.S = sum(ConversionFunction(Vol,Denst));
+Storage_US_likely = sum(ConversionFunction(Volumes,Densities));
+Storage_US_min = sum(ConversionFunction(volumesMin,densitiesMin));
+Storage_US_max = sum(ConversionFunction(volumesMax,densitiesMax));
 
 %Number of years required to store the U.S emission
-Time_Years = Storage_US / emission_US;
+Time_Years_likely = Storage_US_likely / emission_US;
+Time_Years_min = Storage_US_min / emission_US;
+Time_Years_max = Storage_US_max / emission_US;
 
-fprintf('%0.0f years will be required to completely fill the storage' , Time_Years);
+fprintf('%0.0f years will be required to completely fill the storage for the minimum estimated storage capacity.\n' , Time_Years_min);
+fprintf('%0.0f years will be required to completely fill the storage for likely storage capacity.\n' , Time_Years_likely);
+fprintf('%0.0f years will be required to completely fill the storage for maximum estimated storage capacity.\n\n' , Time_Years_max);
 
-% ----------- Calculate storage over years ------------ %
-%   -Using 100% storage rate plot storage over time to see when storage
-%   fills up
-%   -Then, ask user to input % of emissions stored per year 
-%   OR
-%   -Ask user to enter increase in emissions stored per year (% increase)
-%   plot storage and emissions over time
 
 
 
@@ -431,14 +440,83 @@ while again ==1
 end
 
 
+% ---------------------------------Part 3 - 2 Projection------------------------------------------ %
+again = 1;
+while again ==1
+        inputUser = {'Enter expected CO2 storage percent per year [0% - 10%]: ','Enter storage capability growth rate percent [0% - 10%]: '};
+        dlgtitle = 'Info';
+        dmsion = [1 75];
+        defaultInput = {'',''};
+        % Output vector of user input
+        outputBox = inputdlg(inputUser,dlgtitle,dmsion,defaultInput);
+        % Convert cell value to double
+        output_Box = str2double(outputBox);
+        output_Box(1) = output_Box(1)/100;
+        output_Box(2) = output_Box(2)/100;
+
+        % msg of data validation
+        reinputUser = {'Re-enter expected storage percent per year [0% - 10%]: ','Re-enter storage capability growth rate percent [0% - 10%]: '};
+
+        % Data validation [0% - 10%] - While Loop
+                % output_Box(1) = Enter expected CO2 storage percent per year [0% - 10%]
+                % output_Box(2) = Enter storage capability growth rate percent [0% - 10%]
+                % output_Box(3) = Enter base-line capacity storage [BBLML]
+                while output_Box(1) < 0 || output_Box(1) > 10 || output_Box(2) < 0 || output_Box(2) > 10
+                    % Output vector of user input
+                    outputBox = inputdlg(inputUser,dlgtitle,dmsion,defaultInput);
+                    % Convert cell value to double
+                    output_Box = str2double(outputBox);
+                    output_Box(1) = output_Box(1)/100;
+                    output_Box(2) = output_Box(2)/100;
+                end    
+        rate_Growth_CO2 = output_Box(1)/100;  
+        num_Year = length(N_Years);
+        for u = 1:1:num_Year       
+                % Calculate amount of CO2 stored with provided percentage
+                Projected_StorageCO2(u) = totalEmissions(u) .* rate_Growth_CO2;
+                rate_Growth_CO2 = rate_Growth_CO2 + output_Box(2);
+                
+        end    
+        
+        Projected_StorageCO2 = Projected_StorageCO2';
+        Total_Projected_StorageCO2 = Projected_StorageCO2 + S;
+        
+        x_Axis = 1:1:num_Year;
+        subplot(2,1,2);
+        plot(x_Axis, Total_Projected_StorageCO2);
+        xlabel('Year');
+        ylabel('Emission');
+        hold on
+        plot(x_Axis, S);
+        
+%         % Comparison
+%         if  new_Projected_Cap > stored_Projected_CO2
+%             excess_Cap = new_Projected_Cap - stored_Projected_CO2;
+%             msg_Out = sprintf('Extra storage capacity is %0.2f [BBBML]',excess_Cap);
+% %           fprintf('The amount of capacity shortage is %0.2f [BBBML]',excess_Cap)
+%         elseif new_Projected_Cap < stored_Projected_CO2
+%             excess_Cap = abs(new_Projected_Cap - stored_Projected_CO2);
+%             msg_Out  = sprintf('The amount of capacity shortage is %0.2f [BBBML]',excess_Cap);
+% %           fprintf('The amount of capacity shortage is %0.2f [BBBML]',excess_Cap);
+%         elseif new_Projected_Cap == stored_Projected_CO2
+%             excess_Cap = 0;
+%             msg_Out = sprintf('The amount of capacity is the same as projected CO2 can be stored');
+%         end    
+
+%          fprintf('The amount of capacity shortage is %0.2f [BBBML]',excess_Cap);
+%          tot_expected_Stored = abs(new_Projected_Cap - stored_Projected_CO2);
+
+%         h=msgbox('Calculation Completed',...
+%                  msg_Out,'custom',icondata,iconcmap);
+%         [addIcon] = imread('mitbeccsflat.jpg'); 
+        
+        % Repeat request
+        rep = menu('Do you want to repeat?', 'Yes', 'No');
+        if rep == 1
+        elseif rep == 2
+          again =2;
+        end
 
 
-
-
-
-
-
-
-
-
+end
 
