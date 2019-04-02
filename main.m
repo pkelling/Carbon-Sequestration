@@ -61,6 +61,7 @@ lat = latlng(:,1);
 lng = latlng(:,2);
 
 
+
 % This makes the initial map larger
 figh = figure(1);
 pos = get(figh,'position');
@@ -68,6 +69,8 @@ set(figh,'position',[pos(1:2)/2 pos(3:4)*1.5])
 
 
 
+repeatWholeProgram = true;
+while(repeatWholeProgram)
 
 % ----------- Map Visualization of States Emissions --------------- %
 % Get largest power source for each state
@@ -145,14 +148,14 @@ while choice == 1
         barh(categorical(states(stateNum)),groupSources(stateNum,:),'stacked');
         legend(renewSources);
         title("Energy Generation by Sources Per State");
-        xlabel("Energy Generated per Resource [MWh]");
-        ylabel("State");
+        xlabel("Energy Generated per Resource [MWh]",'FontSize',15);
+        ylabel("State",'FontSize',15);
     elseif(~isempty(stateNum)) && renew == 2
         barh(categorical(states(stateNum)),energyBySource(stateNum,:),'stacked');
         legend(powerSources);
         title("Energy Generation by Sources Per State");
-        xlabel("Energy Generated per Resource [MWh]");
-        ylabel("State");
+        xlabel("Energy Generated per Resource [MWh]",'FontSize',15);
+        ylabel("State",'FontSize',15);
     else
         warning("No state selected, moving to next step.");
     end
@@ -421,7 +424,7 @@ while repeatEmissions
         fig2 = bar(x_Axis, y_Axis, 'stacked');
 
         xlim auto;          ylim auto
-        xlabel('Year');     ylabel('Emission [Lbs/MWH]');
+        xlabel('Year');     ylabel('Emissions [Lbs]');
         title('Total Projection CO2 Capture & Emission By Year');
         legend(fig2,{'Captured CO2','Uncaptured CO2'},'Location', 'Best');
         %grid on
@@ -448,6 +451,17 @@ while repeatEmissions
 
     end
     
-    close(figh);
+    if repeatEmissions
+        close(figh);
+    end
+    
 end
  
+
+    choice = menu('Do you want to repeat the program?', 'Yes','Exit');
+    if choice == 0 || choice == 2
+        repeatWholeProgram = false;
+    end
+    
+%whole while loop
+end
