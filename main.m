@@ -307,40 +307,43 @@ fprintf('%0.0f years will be required to completely fill the storage for max est
 
 % ----------- Projections for CO2 Emissions -----------%
 
-Growth_rate= input('Enter a percent change of CO2 emission per year between -5% - 5%:  ');
+repeatEmissions = true;
+while repeatEmissions
 
-while  Growth_rate < -5 || Growth_rate > 5 
-    warning(sprintf('You entered %0.2f, Please enter a value between -5% - 5%',Growth_rate));
-    Growth_rate= input('Enter a percent change of CO2 emission per year between -5% - 5%: ');
-end 
+    Growth_rate= input('Enter a percent change of CO2 emission per year between -5% - 5%:  ');
 
-N_Years= input('Enter the number of years for the projection: ');
+    while  Growth_rate < -5 || Growth_rate > 5 
+        warning(sprintf('You entered %0.2f, Please enter a value between -5% - 5%',Growth_rate));
+        Growth_rate= input('Enter a percent change of CO2 emission per year between -5% - 5%: ');
+    end 
 
-while N_Years <= 0
-    warning(sprintf('You entered %0.0f, Please enter a value greater than zero',N_Years));
     N_Years= input('Enter the number of years for the projection: ');
-end 
 
-Growth_rate= Growth_rate/100+1;
-N_Years= 1:N_Years;
+    while N_Years <= 0
+        warning(sprintf('You entered %0.0f, Please enter a value greater than zero',N_Years));
+        N_Years= input('Enter the number of years for the projection: ');
+    end 
 
-S=[];
-S_Y=[];
-S(1) = sum(totalEmissions);
-for i= 2:length(N_Years)
-    Proj= Growth_rate * S(i-1);
-    S= [S;Proj];
-end
+    Growth_rate= Growth_rate/100+1;
+    N_Years= 1:N_Years;
+
+    S=[];
+    S_Y=[];
+    S(1) = sum(totalEmissions);
+    for i= 2:length(N_Years)
+        Proj= Growth_rate * S(i-1);
+        S= [S;Proj];
+    end
 
 
 
-% --------------------------- Projections for CO2 Emissions and Storage --------------------------%
+    % --------------------------- Projections for CO2 Emissions and Storage --------------------------%
 
-openPlot = 1;
-again = 1;
-while again ==1
+    openPlot = 1;
+    again = 1;
+    while again == 1
         inputUser = {'Enter starting CO2 capture per year as percent of emissions [0% < num < 2%]: ',...
-                    'Enter factor to represent increase in use of carbon capture technologies [0% < number < 1.5%]: '};
+                    'Enter multiplication factor to represent increase in use of carbon capture technologies [1 < num < 5]: '};
         dlgtitle = 'Carbon Capture Inputs';
         dmsion = [1 110];
         defaultInput = {'',''};
@@ -352,20 +355,19 @@ while again ==1
         output_Box_value = str2double(outputBox);
              
         % msg of data validation
-        reinputUser = {'Re-enter starting CO2 capture percent [ 0% < num <2%]: ',...
-                    'Re-enter factor for increase in use of carbon capture [0% < number < 1.5%]: '};
+        reinputUser = {'Re-enter starting CO2 capture percent [ 0% < num < 2%]: ',...
+                    'Re-enter factor for increase in use of carbon capture [1 < num < 5]: '};
  
         % Data validation - While Loop
-        while isempty(output_Box_value) || output_Box_value(1) <= 0 || output_Box_value(1) > 2 || output_Box_value(2) <= 0 || output_Box_value(2) >= 1.5
+        while isempty(output_Box_value) || output_Box_value(1) <= 0 || output_Box_value(1) > 2 || output_Box_value(2) <= 1 || output_Box_value(2) >= 5
             % Output vector of user input
             outputBox = inputdlg(inputUser,dlgtitle,dmsion,defaultInput);
             % Convert cell value to double
             output_Box_value = str2double(outputBox);
         end
         
-
-        multFactor = output_Box_value(2)/100;
         captureRate_CO2 = output_Box_value(1)/100;
+        multFactor = output_Box_value(2);
         
         num_Year = length(N_Years); 
         startingCapture = captureRate_CO2 * S(1);
@@ -433,13 +435,19 @@ while again ==1
         title(tlt);
 
 
-% Repeat request
-rep = menu('Do you want to repeat projection?', 'Yes', 'No');
-if rep == 1
-elseif rep == 2 || rep == 0
-again =2;
-end
+        % Repeat request
+        rep = menu('Do you want to repeat projections?', 'Yes, with new emissions', 'Yes, with same emissions','Exit');
 
- 
+        if rep == 3 || rep == 0
+            again = 2;
+            repeatEmissions = false;
+        elseif rep == 1
+            again = 2;
+        end
+
+
+    end
+    
+    close(figh);
 end
  
