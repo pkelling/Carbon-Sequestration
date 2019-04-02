@@ -148,14 +148,14 @@ while choice == 1
         barh(categorical(states(stateNum)),groupSources(stateNum,:),'stacked');
         legend(renewSources);
         title("Energy Generation by Sources Per State");
-        xlabel("Energy Generated per Resource [MWh]",'FontSize',15);
-        ylabel("State",'FontSize',15);
+        xlabel("Energy Generated per Resource [MWh]");
+        ylabel("State");
     elseif(~isempty(stateNum)) && renew == 2
         barh(categorical(states(stateNum)),energyBySource(stateNum,:),'stacked');
         legend(powerSources);
         title("Energy Generation by Sources Per State");
-        xlabel("Energy Generated per Resource [MWh]",'FontSize',15);
-        ylabel("State",'FontSize',15);
+        xlabel("Energy Generated per Resource [MWh]");
+        ylabel("State");
     else
         warning("No state selected, moving to next step.");
     end
@@ -313,17 +313,17 @@ fprintf('%0.0f years will be required to completely fill the storage for max est
 repeatEmissions = true;
 while repeatEmissions
 
-    Growth_rate= input('Enter a percent change of CO2 emission per year between -5% and + 5%:  ');
+    Growth_rate= input('Enter a percent change of CO2 emission per year between -5% and +5%: ');
 
     while  Growth_rate < -5 || Growth_rate > 5 
-        warning(sprintf('You entered %0.2f, Please enter a value between -5% and + 5%:',Growth_rate));
+        warning(sprintf('You entered %0.2f, Please enter a value between -5% and +5%: ',Growth_rate));
         Growth_rate= input('Enter a percent change of CO2 emission per year between -5% and +5%: ');
     end 
 
     N_Years= input('Enter the number of years for the projection: ');
 
     while N_Years <= 0
-        warning(sprintf('You entered %0.0f, Please enter a value greater than zero. ',N_Years));
+        warning(sprintf('You entered %0.0f, Please enter a value greater than zero: ',N_Years));
         N_Years= input('Enter the number of years for the projection: ');
     end 
 
@@ -439,7 +439,7 @@ while repeatEmissions
 
 
         % Repeat request
-        rep = menu('Do you want to repeat projections?', 'Yes, with new emissions', 'Yes, with same emissions','Exit');
+        rep = menu('Do you want to repeat projections?', 'Yes, with new emissions', 'Yes, with same emissions','No');
 
         if rep == 3 || rep == 0
             again = 2;
