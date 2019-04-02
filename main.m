@@ -439,7 +439,7 @@ while repeatEmissions
 
 
         % Repeat request
-        rep = menu('Do you want to repeat projections?', 'Yes, with new emissions', 'Yes, with same emissions','Exit');
+        rep = menu('Do you want to repeat projections?', 'Yes, with new emissions', 'Yes, with same emissions','No');
 
         if rep == 3 || rep == 0
             again = 2;
