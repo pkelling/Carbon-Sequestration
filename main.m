@@ -451,7 +451,7 @@ while repeatEmissions
 
     end
     
-    if repeatEmissions
+    if repeatEmissions == false
         close(figh);
     end
     
